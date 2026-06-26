@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ShopHub</string>
+    <string name="title_activity_main">ShopHub</string>
+    <string name="package_name">in.bigpool.marketplace</string>
+    <string name="custom_url_scheme">in.bigpool.marketplace</string>
+</resources>

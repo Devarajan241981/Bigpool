@@ -39,3 +39,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# capacitor
+/android/app/build/
+/android/.gradle/
+/android/.idea/
+/android/captures/
+/www/
+
+# editor & OS
+.vscode/
+.idea/
+Thumbs.db
+
+# playwright mcp artifacts
+/.playwright-mcp/
+
+# Claude Code local settings
+/.claude/
