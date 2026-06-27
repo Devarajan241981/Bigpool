@@ -49,11 +49,21 @@ function ProductsContent() {
       const cat = categories.find(
         (c) => c.slug === selectedCategory || c.name.toLowerCase() === selectedCategory.toLowerCase()
       );
-      if (cat) result = result.filter((p) =>
-        p.categoryId === cat.id ||
-        p.categoryId === cat.slug ||
-        p.category.toLowerCase() === cat.name.toLowerCase()
-      );
+      if (cat) {
+        result = result.filter((p) =>
+          p.categoryId === cat.id ||
+          p.categoryId === cat.slug ||
+          p.category.toLowerCase() === cat.name.toLowerCase()
+        );
+      } else {
+        // Categories not loaded yet — match directly against slug/name on the product
+        const slugLower = selectedCategory.toLowerCase();
+        result = result.filter((p) =>
+          p.categoryId === selectedCategory ||
+          p.category.toLowerCase().replace(/[\s&]+/g, "-") === slugLower ||
+          p.category.toLowerCase() === slugLower.replace(/-/g, " ")
+        );
+      }
     }
 
     result = result.filter(
@@ -240,13 +250,38 @@ function ProductsContent() {
         {/* Products grid */}
         <div className="flex-1 min-w-0">
           {filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl mb-4">🔍</p>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">No products found</h3>
-              <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
-              <Button onClick={() => { setSelectedCategory(""); setPriceRange([0, 250000]); setSelectedRating(0); }} variant="outline">
-                Clear filters
-              </Button>
+            <div>
+              <div className="text-center py-10 bg-white rounded-xl border border-gray-200 mb-6">
+                <p className="text-4xl mb-3">🏪</p>
+                <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                  {selectedCategory
+                    ? `No products in "${categories.find(c => c.slug === selectedCategory)?.name ?? selectedCategory}" right now`
+                    : "No products found"}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {selectedCategory
+                    ? "Our sellers are restocking soon. Browse other categories below!"
+                    : "Try adjusting your search or filters"}
+                </p>
+                <Button
+                  onClick={() => { setSelectedCategory(""); setPriceRange([0, 250000]); setSelectedRating(0); }}
+                  className="bg-[#0d9488] hover:bg-[#0f766e] text-white"
+                >
+                  Browse All Products
+                </Button>
+              </div>
+
+              {/* Show products from other categories */}
+              {products.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-800 mb-3">You might also like</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    {products.slice(0, 8).map((p) => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
