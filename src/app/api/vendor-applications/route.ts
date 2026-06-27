@@ -119,19 +119,40 @@ export async function PATCH(request: NextRequest) {
     .eq("id", id);
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
-  // If approved, upgrade the user's role in the users table
+  // If approved, upgrade the user — create account if they don't have one yet
   if (status === "approved") {
     const { data: appData } = await db
       .from("vendor_applications")
-      .select("email, business_name")
+      .select("*")
       .eq("id", id)
       .single();
 
     if (appData) {
-      await db
+      // Check if a user with this email already exists
+      const { data: existingUser } = await db
         .from("users")
-        .update({ role: "seller", business_name: appData.business_name })
-        .eq("email", appData.email);
+        .select("id")
+        .eq("email", appData.email)
+        .single();
+
+      if (existingUser) {
+        // Existing user → just upgrade role
+        await db
+          .from("users")
+          .update({ role: "seller", business_name: appData.business_name })
+          .eq("email", appData.email);
+      } else {
+        // No user account yet → create one so they can log in
+        await db.from("users").insert({
+          id: `seller_${Date.now()}`,
+          name: appData.name,
+          email: appData.email,
+          phone: appData.phone ?? "",
+          password: "", // No password yet — they must use "Forgot Password" to set one
+          role: "seller",
+          business_name: appData.business_name,
+        });
+      }
     }
   }
 

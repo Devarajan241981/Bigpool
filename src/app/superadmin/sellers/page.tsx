@@ -86,11 +86,11 @@ export default function SuperAdminSellersPage() {
   ];
 
   const filtered = allEntries.filter((entry) => {
-    const name = entry.type === "seller" ? entry.data.businessName : entry.data.businessName;
-    const email = entry.type === "seller" ? entry.data.email : entry.data.email;
-    const status = entry.type === "seller" ? entry.data.status : entry.data.status;
-    const matchSearch = name.toLowerCase().includes(search.toLowerCase()) ||
-      email.toLowerCase().includes(search.toLowerCase());
+    const name = (entry.data.businessName ?? entry.data.name ?? "").toLowerCase();
+    const email = (entry.data.email ?? "").toLowerCase();
+    const status = entry.data.status ?? "";
+    const q = search.toLowerCase();
+    const matchSearch = !q || name.includes(q) || email.includes(q);
     const matchFilter = filter === "all" || status === filter;
     return matchSearch && matchFilter;
   });

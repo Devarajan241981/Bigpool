@@ -1,4 +1,4 @@
-const CACHE = "bigpool-v4";
+const CACHE = "bigpool-v5";
 
 const STATIC = ["/", "/customer/products", "/customer/cart"];
 
@@ -31,16 +31,27 @@ self.addEventListener("fetch", (e) => {
 
 /* ── Web Push ── */
 self.addEventListener("push", (e) => {
-  if (!e.data) return;
-  const data = e.data.json();
+  // Parse payload — default to empty object if missing or malformed
+  let data = {};
+  try { if (e.data) data = e.data.json(); } catch {}
 
-  // If the app is open and visible in any tab, skip the system notification —
-  // the in-app bell already handles it. Showing a system notification while the
-  // app is in the foreground is what causes audio interruptions.
   e.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       const appIsOpen = list.some((c) => c.visibilityState === "visible");
-      if (appIsOpen) return; // App is in foreground — don't fire OS notification
+
+      if (appIsOpen) {
+        // App is in foreground: tell the page to update the in-app bell instead.
+        // We MUST still show a notification (userVisibleOnly:true requires it),
+        // so show a silent one with no badge/sound/vibration so nothing appears.
+        list.forEach((c) => c.postMessage({ type: "push", data }));
+        return self.registration.showNotification("", {
+          silent: true,
+          tag: "bp-silent-foreground",
+          requireInteraction: false,
+        });
+      }
+
+      // App is in background — show full visible notification
       return self.registration.showNotification(data.title || "Bigpool", {
         body: data.body || "",
         icon: "/icon-192.png",
