@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useAuthStore, useHasHydrated } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import { IndianRupee, TrendingUp, Package, Banknote, Clock, CheckCircle, ArrowUpRight } from "lucide-react";
+import { IndianRupee, TrendingUp, Package, Banknote, Clock, CheckCircle, ArrowUpRight, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { subscribeToTable } from "@/lib/supabase-browser";
+
+const POLL_MS = 30_000;
 
 interface Commission {
   id: string;
@@ -33,6 +36,8 @@ export default function VendorEarningsPage() {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [summary, setSummary] = useState<Summary>({ totalOrders: 0, totalRevenue: 0, totalCommission: 0, vendorPayout: 0, pendingPayout: 0 });
   const [loading, setLoading] = useState(true);
+  const [pulse, setPulse] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || (user?.role !== "seller" && user?.role !== "admin"))) {
@@ -40,17 +45,31 @@ export default function VendorEarningsPage() {
     }
   }, [hasHydrated, isAuthenticated, user, router]);
 
+  const fetchComms = useCallback(async (showPulse = false) => {
+    if (!user?.email) return;
+    try {
+      const res = await fetch(`/api/commissions?email=${encodeURIComponent(user.email)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setCommissions(data.commissions ?? []);
+      setSummary(data.summary ?? { totalOrders: 0, totalRevenue: 0, totalCommission: 0, vendorPayout: 0, pendingPayout: 0 });
+      if (showPulse) { setPulse(true); setTimeout(() => setPulse(false), 600); }
+    } catch { /* silent */ }
+    finally { setLoading(false); }
+  }, [user?.email]);
+
   useEffect(() => {
     if (!user?.email) return;
-    fetch(`/api/commissions?email=${encodeURIComponent(user.email)}`)
-      .then(r => r.json())
-      .then(data => {
-        setCommissions(data.commissions ?? []);
-        setSummary(data.summary ?? { totalOrders: 0, totalRevenue: 0, totalCommission: 0, vendorPayout: 0, pendingPayout: 0 });
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [user?.email]);
+    fetchComms();
+    timerRef.current = setInterval(() => fetchComms(true), POLL_MS);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [user?.email, fetchComms]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!user?.email) return;
+    return subscribeToTable("order_commissions", `vendor_email=eq.${user.email}`, () => fetchComms(true));
+  }, [user?.email, fetchComms]);
 
   if (!hasHydrated || !isAuthenticated) return null;
 
@@ -58,9 +77,17 @@ export default function VendorEarningsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 pb-24 md:pb-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Banknote className="w-5 h-5 text-[#0d9488]" />
-        <h1 className="text-2xl font-bold text-gray-900">My Earnings</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Banknote className="w-5 h-5 text-[#0d9488]" />
+          <h1 className="text-2xl font-bold text-gray-900">My Earnings</h1>
+          <span className={`inline-flex items-center gap-1 text-xs text-green-600 ml-1 transition-opacity ${pulse ? "opacity-100" : "opacity-50"}`}>
+            <span className={`w-1.5 h-1.5 rounded-full bg-green-500 ${pulse ? "animate-ping" : ""}`} /> Live
+          </span>
+        </div>
+        <button onClick={() => fetchComms(true)} className="text-xs text-[#0d9488] border border-[#0d9488]/30 rounded-lg px-3 py-1.5 hover:bg-teal-50 flex items-center gap-1.5 transition-colors">
+          <RefreshCw className={`w-3.5 h-3.5 ${pulse ? "animate-spin" : ""}`} /> Refresh
+        </button>
       </div>
 
       {/* Summary cards */}

@@ -284,15 +284,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <h1 className="text-xl font-bold text-gray-900 mt-1">{product.name}</h1>
 
             <div className="flex items-center gap-3 mt-2">
-              <div className="flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-gray-200 text-gray-200"}`} />
-                ))}
-              </div>
-              <span className="text-[#0d9488] text-sm hover:underline cursor-pointer">
-                {product.reviewCount.toLocaleString()} ratings
-              </span>
-              <button className="text-gray-400 hover:text-gray-600">
+              {reviews.length > 0 ? (
+                <>
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => {
+                      const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+                      return <Star key={i} className={`w-4 h-4 ${i < Math.floor(avg) ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-gray-200 text-gray-200"}`} />;
+                    })}
+                  </div>
+                  <span className="text-[#0d9488] text-sm hover:underline cursor-pointer" onClick={() => setActiveTab("reviews")}>
+                    {reviews.length} {reviews.length === 1 ? "rating" : "ratings"}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-gray-400 cursor-pointer hover:underline" onClick={() => setActiveTab("reviews")}>
+                  No ratings yet — be the first
+                </span>
+              )}
+              <button className="text-gray-400 hover:text-gray-600 ml-auto">
                 <Share2 className="w-4 h-4" />
               </button>
             </div>
@@ -494,18 +503,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </TabsContent>
 
           <TabsContent value="reviews" className="bg-white rounded-xl border border-gray-200 p-6 mt-2">
-            {/* Rating summary with breakdown bars */}
-            {(() => {
+            {/* Rating summary — only shown when real reviews exist */}
+            {reviews.length > 0 && (() => {
               const allRatings = reviews.map((r) => r.rating);
-              const total = allRatings.length || product.reviewCount || 1;
+              const total = allRatings.length;
               const counts = [5, 4, 3, 2, 1].map((star) => ({
                 star,
                 count: allRatings.filter((r) => r === star).length,
                 pct: Math.round((allRatings.filter((r) => r === star).length / total) * 100),
               }));
-              const avgRating = allRatings.length
-                ? (allRatings.reduce((s, r) => s + r, 0) / allRatings.length).toFixed(1)
-                : product.rating.toFixed(1);
+              const avgRating = (allRatings.reduce((s, r) => s + r, 0) / allRatings.length).toFixed(1);
               return (
                 <div className="flex items-start gap-6 mb-6 pb-6 border-b border-gray-100">
                   <div className="text-center flex-shrink-0">
@@ -515,7 +522,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         <Star key={i} className={`w-4 h-4 ${i < Math.floor(Number(avgRating)) ? "fill-[#f59e0b] text-[#f59e0b]" : "fill-gray-200 text-gray-200"}`} />
                       ))}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{product.reviewCount.toLocaleString()} ratings</p>
+                    <p className="text-xs text-gray-500 mt-1">{total} {total === 1 ? "rating" : "ratings"}</p>
                   </div>
                   <div className="flex-1 space-y-1.5">
                     {counts.map(({ star, count, pct }) => (
