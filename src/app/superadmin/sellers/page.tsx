@@ -57,12 +57,18 @@ export default function SuperAdminSellersPage() {
   };
 
   useEffect(() => {
-    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
+    // Fetch whenever auth state or token changes — AuthProvider restores the
+    // access token asynchronously on page refresh, so we must re-run when it
+    // arrives. Fetching with no token returns 401 (handled gracefully).
+    if (hasHydrated && isAuthenticated && user?.role === "admin") {
       fetchData();
     }
   }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
+
+  // Token not yet restored by AuthProvider (page refresh) — show loading shimmer
+  const tokenLoading = !accessToken && isAuthenticated;
 
   const updateSellerStatus = (sellerId: string, status: "approved" | "rejected") => {
     fetch(`/api/sellers/${sellerId}`, {
@@ -292,10 +298,25 @@ export default function SuperAdminSellersPage() {
           }
         })}
 
-        {filtered.length === 0 && (
+        {tokenLoading && (
+          <div className="text-center py-12 text-gray-400">
+            <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin opacity-40" />
+            <p className="text-sm">Restoring session…</p>
+          </div>
+        )}
+
+        {!tokenLoading && filtered.length === 0 && (
           <div className="text-center py-12 text-gray-400">
             <Store className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>No sellers or applications found</p>
+            <p className="text-sm">No sellers or applications found</p>
+            {allEntries.length === 0 && (
+              <p className="text-xs mt-2 text-gray-300">
+                If you just logged in, try clicking{" "}
+                <button onClick={fetchData} className="text-[#0d9488] underline">Refresh</button>.
+                If still empty,{" "}
+                <a href="/superadmin/login" className="text-[#0d9488] underline">re-login here</a>.
+              </p>
+            )}
           </div>
         )}
       </div>

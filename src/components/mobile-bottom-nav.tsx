@@ -2,28 +2,40 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, ShoppingCart, User } from "lucide-react";
-import { useCartStore, useHasHydrated } from "@/lib/store";
+import { Home, Search, ShoppingCart, User, Store } from "lucide-react";
+import { useCartStore, useHasHydrated, useAuthStore } from "@/lib/store";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const hasHydrated = useHasHydrated();
   const { items } = useCartStore();
+  const { user, isAuthenticated } = useAuthStore();
   const cartCount = hasHydrated ? items.reduce((s, i) => s + i.quantity, 0) : 0;
+  const isSeller = hasHydrated && isAuthenticated && user?.role === "seller";
 
-  const tabs = [
-    { href: "/", icon: Home, label: "Home" },
-    { href: "/customer/search", icon: Search, label: "Search" },
-    { href: "/customer/cart", icon: ShoppingCart, label: "Cart", badge: hasHydrated ? cartCount : 0 },
-    { href: "/customer/profile", icon: User, label: "Profile" },
-  ];
+  const tabs = isSeller
+    ? [
+        { href: "/", icon: Home, label: "Home" },
+        { href: "/customer/search", icon: Search, label: "Search" },
+        { href: "/customer/cart", icon: ShoppingCart, label: "Cart", badge: cartCount },
+        { href: "/vendor/dashboard", icon: Store, label: "Seller" },
+        { href: "/customer/profile", icon: User, label: "Profile" },
+      ]
+    : [
+        { href: "/", icon: Home, label: "Home" },
+        { href: "/customer/search", icon: Search, label: "Search" },
+        { href: "/customer/cart", icon: ShoppingCart, label: "Cart", badge: cartCount },
+        { href: "/customer/profile", icon: User, label: "Profile" },
+      ];
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
+  const cols = isSeller ? "grid-cols-5" : "grid-cols-4";
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 md:hidden">
-      <div className="grid grid-cols-4 h-16">
+      <div className={`grid ${cols} h-16`}>
         {tabs.map(({ href, icon: Icon, label, badge }) => {
           const active = isActive(href);
           return (
