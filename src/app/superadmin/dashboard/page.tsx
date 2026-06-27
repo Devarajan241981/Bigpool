@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore, useSellerApplicationStore, useProductStore, useHasHydrated } from "@/lib/store";
+import { useAuthStore, useSellerApplicationStore, useProductStore, useHasHydrated, getAuthHeaders } from "@/lib/store";
 import type { Seller, PromotionRequest, RefundRequest } from "@/lib/types";
 
 const adminNavItems = [
@@ -22,7 +22,7 @@ const adminNavItems = [
 ];
 
 export default function SuperAdminDashboard() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken } = useAuthStore();
   const { applications } = useSellerApplicationStore();
   const { products, fetchProducts } = useProductStore();
   const hasHydrated = useHasHydrated();
@@ -32,12 +32,13 @@ export default function SuperAdminDashboard() {
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
 
   useEffect(() => {
-    if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return;
+    if (!hasHydrated || !isAuthenticated || user?.role !== "admin" || !accessToken) return;
+    const h = getAuthHeaders();
     fetchProducts();
-    fetch("/api/sellers").then((r) => r.ok ? r.json() : []).then(setSellers).catch(() => {});
+    fetch("/api/sellers", { headers: h }).then((r) => r.ok ? r.json() : []).then(setSellers).catch(() => {});
     fetch("/api/promotions").then((r) => r.ok ? r.json() : []).then(setPromos).catch(() => {});
     fetch("/api/refunds").then((r) => r.ok ? r.json() : []).then(setRefunds).catch(() => {});
-  }, [hasHydrated, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isAuthenticated || user?.role !== "admin") {
     return (

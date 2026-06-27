@@ -65,11 +65,11 @@ export async function POST(request: NextRequest) {
       {
         status: "placed",
         location: "Online",
-        timestamp: new Date().toLocaleString("en-IN"),
+        timestamp: new Date().toISOString(),
         description: "Order placed successfully",
       },
     ],
-    createdAt: new Date().toLocaleDateString("en-IN"),
+    createdAt: new Date().toISOString(),
   };
 
   if (!db) return Response.json(newOrder, { status: 201 });

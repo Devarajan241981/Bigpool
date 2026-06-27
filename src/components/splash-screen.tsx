@@ -2,104 +2,120 @@
 
 import { useEffect, useState } from "react";
 
+const LETTERS = ["B", "i", "g", "p", "o", "o", "l"];
+
 export default function SplashScreen() {
-  // Start hidden — only show on genuine first visit (avoids 1-frame flash on every subsequent load)
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState<"hidden" | "in" | "hold" | "out">("hidden");
 
   useEffect(() => {
-    if (sessionStorage.getItem("splashed")) return; // already seen — stay hidden
+    if (sessionStorage.getItem("splashed")) return;
     sessionStorage.setItem("splashed", "1");
-    setVisible(true);
-    const t = setTimeout(() => setVisible(false), 2400);
-    return () => clearTimeout(t);
+
+    // Phase timeline: in → hold → out
+    setPhase("in");
+    const t1 = setTimeout(() => setPhase("hold"), 700);
+    const t2 = setTimeout(() => setPhase("out"), 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  if (!visible) return null;
+  if (phase === "hidden") return null;
 
   return (
     <>
       <style>{`
-        /* ── Wrapper fades out at the end ── */
-        @keyframes sp-out {
-          0%,75% { opacity:1; }
-          100%   { opacity:0; }
+        @keyframes logo-pop {
+          0%   { opacity:0; transform:scale(0.7) translateY(8px); }
+          60%  { opacity:1; transform:scale(1.06) translateY(-2px); }
+          100% { opacity:1; transform:scale(1) translateY(0); }
         }
-        /* ── Left half slides in from left ── */
-        @keyframes sp-left {
-          0%   { transform: translateX(-110%); }
-          55%  { transform: translateX(2%); }
-          70%  { transform: translateX(-1%); }
-          100% { transform: translateX(0); }
+        @keyframes letter-drop {
+          0%   { opacity:0; transform:translateY(-18px) scale(0.7); }
+          70%  { opacity:1; transform:translateY(2px) scale(1.05); }
+          100% { opacity:1; transform:translateY(0) scale(1); }
         }
-        /* ── Right half slides in from right ── */
-        @keyframes sp-right {
-          0%   { transform: translateX(110%); }
-          55%  { transform: translateX(-2%); }
-          70%  { transform: translateX(1%); }
-          100% { transform: translateX(0); }
+        @keyframes tagline-up {
+          0%   { opacity:0; transform:translateY(10px); }
+          100% { opacity:1; transform:translateY(0); }
         }
-        /* ── Flash at collision ── */
-        @keyframes sp-flash {
-          0%,45% { opacity:0; transform:scale(0.5); }
-          55%    { opacity:1; transform:scale(1.2); }
-          75%    { opacity:0; transform:scale(1.6); }
-          100%   { opacity:0; }
+        @keyframes sp-fade-in {
+          from { opacity:0; }
+          to   { opacity:1; }
         }
-        /* ── Logo gentle pulse after merge ── */
-        @keyframes sp-pulse {
-          0%,55% { filter: brightness(1); }
-          65%    { filter: brightness(1.4) drop-shadow(0 0 18px #0d9488cc); }
-          80%    { filter: brightness(1); }
-          100%   { filter: brightness(1); }
+        @keyframes sp-fade-out {
+          from { opacity:1; }
+          to   { opacity:0; }
         }
-        /* ── Tagline slides up ── */
-        @keyframes sp-tagline {
-          0%,60%  { opacity:0; transform:translateY(12px); }
-          80%     { opacity:1; transform:translateY(0); }
-          100%    { opacity:1; transform:translateY(0); }
-        }
-
-        .sp-wrap   { animation: sp-out   2.4s ease forwards; }
-        .sp-left   { animation: sp-left  0.9s 0.15s cubic-bezier(0.22,1,0.36,1) both; }
-        .sp-right  { animation: sp-right 0.9s 0.15s cubic-bezier(0.22,1,0.36,1) both; }
-        .sp-flash  { animation: sp-flash 0.9s 0.15s ease forwards; }
-        .sp-pulse  { animation: sp-pulse 0.9s 0.15s ease forwards; }
-        .sp-tagline{ animation: sp-tagline 2.4s ease forwards; }
+        .sp-in  { animation: sp-fade-in  0.2s ease forwards; }
+        .sp-out { animation: sp-fade-out 0.4s ease forwards; }
       `}</style>
 
-      <div className="sp-wrap fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f172a]">
-
-        {/* ── Merging logo ── */}
-        <div className="sp-pulse relative" style={{ width: 180, height: 180 }}>
-
-          {/* Left half — the "b" slides in */}
-          <div
-            className="sp-left absolute inset-0 overflow-hidden"
-            style={{ clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)" }}
-          >
-            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block", mixBlendMode:"screen" }} />
-          </div>
-
-          {/* Right half — the cart slides in */}
-          <div
-            className="sp-right absolute inset-0 overflow-hidden"
-            style={{ clipPath: "polygon(50% 0, 100% 0, 100% 100%, 50% 100%)" }}
-          >
-            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block", mixBlendMode:"screen" }} />
-          </div>
-
-          {/* Collision flash ring */}
-          <div
-            className="sp-flash absolute inset-0 m-auto rounded-full pointer-events-none"
-            style={{
-              width: 80,
-              height: 80,
-              top: "50%", left: "50%",
-              transform: "translate(-50%,-50%)",
-              background: "radial-gradient(circle, #0d9488aa 0%, transparent 70%)",
-            }}
+      <div
+        className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#0f172a] ${phase === "out" ? "sp-out" : "sp-in"}`}
+        style={{ pointerEvents: phase === "out" ? "none" : "all" }}
+      >
+        {/* Logo */}
+        <div
+          style={{
+            animation: "logo-pop 0.5s 0.05s cubic-bezier(0.34,1.56,0.64,1) both",
+            width: 96,
+            height: 96,
+            marginBottom: 28,
+          }}
+        >
+          <img
+            src="/logo.png"
+            alt="Bigpool"
+            width={96}
+            height={96}
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         </div>
+
+        {/* Brand name — letter-by-letter reveal */}
+        <div className="flex items-baseline gap-[2px] mb-3">
+          {LETTERS.map((l, i) => (
+            <span
+              key={i}
+              style={{
+                animation: `letter-drop 0.4s ${0.18 + i * 0.06}s cubic-bezier(0.34,1.3,0.64,1) both`,
+                fontSize: 36,
+                fontWeight: 800,
+                color: "#fff",
+                letterSpacing: -0.5,
+                lineHeight: 1,
+                display: "inline-block",
+              }}
+            >
+              {l}
+            </span>
+          ))}
+        </div>
+
+        {/* Tagline */}
+        <p
+          style={{
+            animation: "tagline-up 0.5s 0.75s ease both",
+            color: "#94a3b8",
+            fontSize: 13,
+            fontWeight: 500,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          India&apos;s Favourite Marketplace
+        </p>
+
+        {/* Teal accent line */}
+        <div
+          style={{
+            animation: "tagline-up 0.5s 0.9s ease both",
+            width: 40,
+            height: 3,
+            borderRadius: 99,
+            background: "#0d9488",
+            marginTop: 16,
+          }}
+        />
       </div>
     </>
   );

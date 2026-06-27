@@ -1,9 +1,18 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
+import { requireAuth, requireAdmin } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth instanceof Response) return auth;
+
   const email = request.nextUrl.searchParams.get("email");
   if (!email) return Response.json({ error: "Email required." }, { status: 400 });
+
+  // Non-admin users can only access their own commissions
+  if (auth.role !== "admin" && auth.email !== email.toLowerCase().trim()) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const db = getDb();
   if (!db) return Response.json({ commissions: [], summary: { totalRevenue: 0, totalCommission: 0, vendorPayout: 0, totalOrders: 0, pendingPayout: 0 } });
@@ -57,6 +66,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = requireAdmin(request);
+  if (auth instanceof Response) return auth;
+
   const { ids, status } = await request.json();
   if (!ids?.length || !status) return Response.json({ error: "ids and status required." }, { status: 400 });
 

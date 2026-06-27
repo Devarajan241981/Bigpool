@@ -1,9 +1,12 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/api-auth";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: Ctx) {
+  const auth = requireAdmin(request);
+  if (auth instanceof Response) return auth;
   const { id } = await params;
   const body = await request.json();
   const db = getDb();

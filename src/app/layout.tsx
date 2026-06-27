@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       "Shop electronics, fashion, home & kitchen and more from trusted Indian sellers. Free delivery, easy returns, 100% authentic products.",
     images: [
       {
-        url: `${BASE}/og-image.png`,
+        url: `${BASE}/opengraph-image`,
         width: 1200,
         height: 630,
         alt: "Bigpool — India's Online Marketplace",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bigpool — India's Online Marketplace",
     description: "Shop millions of products from trusted Indian sellers.",
-    images: [`${BASE}/og-image.png`],
+    images: [`${BASE}/opengraph-image`],
   },
   robots: {
     index: true,

@@ -60,9 +60,21 @@ async function sendWelcomeEmail(name: string, email: string) {
 }
 
 export async function POST(request: NextRequest) {
-  const { name, email, phone, password } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const { name, email, phone, password } = body;
+
   if (!name || !email || !password) {
     return Response.json({ error: "Name, email and password are required." }, { status: 400 });
+  }
+  if (typeof name !== "string" || name.trim().length < 2 || name.length > 80) {
+    return Response.json({ error: "Name must be 2–80 characters." }, { status: 400 });
+  }
+  if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+    return Response.json({ error: "Password must be 8–128 characters." }, { status: 400 });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return Response.json({ error: "Invalid email address." }, { status: 400 });
   }
 
   const normalizedEmail = email.toLowerCase().trim();

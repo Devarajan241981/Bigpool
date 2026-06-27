@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useSellerApplicationStore, useAuthStore, useHasHydrated } from "@/lib/store";
+import { useSellerApplicationStore, useAuthStore, useHasHydrated, getAuthHeaders } from "@/lib/store";
 // useSellerApplicationStore kept for updateStatus (syncs same-browser customer status view)
 import type { Seller } from "@/lib/types";
 import type { SellerApplication } from "@/lib/store";
@@ -21,7 +21,7 @@ type DisplayEntry =
   | { type: "application"; data: SellerApplication };
 
 export default function SuperAdminSellersPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -40,24 +40,25 @@ export default function SuperAdminSellersPage() {
   }, [hasHydrated, isAuthenticated, user, router]);
 
   useEffect(() => {
-    if (hasHydrated && isAuthenticated && user?.role === "admin") {
-      fetch("/api/sellers")
+    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
+      const h = getAuthHeaders();
+      fetch("/api/sellers", { headers: h })
         .then((r) => r.ok ? r.json() : [])
         .then(setSellers)
         .catch(() => {});
-      fetch("/api/vendor-applications")
+      fetch("/api/vendor-applications", { headers: h })
         .then((r) => r.ok ? r.json() : [])
         .then(setApiApps)
         .catch(() => {});
     }
-  }, [hasHydrated, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 
   const updateSellerStatus = (sellerId: string, status: "approved" | "rejected") => {
     fetch(`/api/sellers/${sellerId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ status }),
     }).catch(() => {});
     setSellers(sellers.map((s) => s.id === sellerId ? { ...s, status, verified: status === "approved" } : s));
@@ -69,7 +70,7 @@ export default function SuperAdminSellersPage() {
     // Update server
     fetch("/api/vendor-applications", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ id, status }),
     }).catch(() => {});
     // Update local Zustand store too (for same-browser customer status page)

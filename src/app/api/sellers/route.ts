@@ -1,6 +1,10 @@
+import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
+import { requireAdmin } from "@/lib/api-auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireAdmin(req);
+  if (auth instanceof Response) return auth;
   const db = getDb();
   if (!db) return Response.json([]);
 

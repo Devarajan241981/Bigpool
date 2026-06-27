@@ -198,6 +198,12 @@ export const useAuthStore = create<AuthStore>()(
   )
 );
 
+/** Call anywhere (outside React) to get Authorization header for API calls. */
+export function getAuthHeaders(): Record<string, string> {
+  const token = useAuthStore.getState().accessToken;
+  return token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+}
+
 export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set, get) => ({

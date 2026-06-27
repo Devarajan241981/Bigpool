@@ -43,9 +43,14 @@ function buildResponse(user: {
 }
 
 export async function POST(request: NextRequest) {
-  const { email, password } = await request.json();
-  if (!email || !password) {
+  const body = await request.json().catch(() => ({}));
+  const { email, password } = body;
+  if (!email || !password || typeof email !== "string" || typeof password !== "string") {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  }
+  // Prevent excessively long inputs from being processed
+  if (email.length > 254 || password.length > 128) {
+    return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
 
   const normalizedEmail = email.toLowerCase().trim();

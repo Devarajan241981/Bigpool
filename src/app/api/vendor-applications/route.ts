@@ -1,10 +1,13 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
 import { upgradeToSeller } from "@/lib/server-store";
+import { requireAdmin } from "@/lib/api-auth";
 
 const inMemoryApps: Record<string, unknown>[] = [];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = requireAdmin(req);
+  if (auth instanceof Response) return auth;
   const db = getDb();
   if (!db) return Response.json(inMemoryApps);
 
@@ -75,6 +78,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = requireAdmin(request);
+  if (auth instanceof Response) return auth;
+
   const { id } = await request.json();
   const db = getDb();
 
@@ -90,6 +96,9 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const auth = requireAdmin(request);
+  if (auth instanceof Response) return auth;
+
   const { id, status } = await request.json();
   const db = getDb();
 

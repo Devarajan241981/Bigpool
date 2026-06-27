@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { RotateCcw, CheckCircle, XCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore, useHasHydrated } from "@/lib/store";
+import { useAuthStore, useHasHydrated, getAuthHeaders } from "@/lib/store";
 import type { RefundRequest } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function SuperAdminRefundsPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
@@ -21,20 +21,20 @@ export default function SuperAdminRefundsPage() {
   }, [hasHydrated, isAuthenticated, user, router]);
 
   useEffect(() => {
-    if (hasHydrated && isAuthenticated && user?.role === "admin") {
+    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
       fetch("/api/refunds")
         .then((r) => r.ok ? r.json() : [])
         .then(setRefunds)
         .catch(() => {});
     }
-  }, [hasHydrated, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 
   const updateStatus = (id: string, status: "approved" | "rejected" | "processed") => {
     fetch(`/api/refunds/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ status }),
     }).catch(() => {});
     setRefunds(refunds.map((r) => r.id === id ? { ...r, status, updatedAt: new Date().toISOString().split("T")[0] } : r));
