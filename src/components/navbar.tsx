@@ -54,7 +54,8 @@ export default function Navbar() {
   const { notifications, markAllRead, unreadCount } = useNotificationStore();
 
   const cartCount = items.reduce((s, i) => s + i.quantity, 0);
-  const unread = unreadCount();
+  const myNotifications = notifications.filter((n) => !n.userId || n.userId === user?.id);
+  const unread = myNotifications.filter((n) => !n.read).length;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +81,7 @@ export default function Navbar() {
           </Link>
 
           {/* Search */}
-          <div ref={searchRef} className="flex-1 max-w-3xl mx-4 relative">
+          <div ref={searchRef} className="flex-1 max-w-3xl mx-2 md:mx-4 relative">
             <form onSubmit={handleSearch}>
               <div className="flex w-full rounded-md overflow-hidden">
                 <select className="bg-[#f3f3f3] text-black text-sm px-3 border-r border-gray-300 outline-none hidden md:block">
@@ -157,14 +158,14 @@ export default function Navbar() {
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-1 ml-auto flex-shrink-0">
-            {/* User Menu */}
+          <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
+            {/* User Menu — hidden on mobile (handled by bottom nav profile tab) */}
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <button className="text-white hover:bg-white/10 flex items-center gap-1 h-auto py-1 px-2 rounded transition-colors">
+                  <button className="text-white hover:bg-white/10 flex items-center gap-1 h-auto py-1 px-2 rounded transition-colors hidden md:flex">
                     <User className="w-5 h-5" />
-                    <div className="hidden sm:flex flex-col text-left">
+                    <div className="flex flex-col text-left">
                       <span className="text-[10px] text-gray-300">
                         {isAuthenticated ? `Hello, ${user?.name?.split(" ")[0]}` : "Hello, Sign in"}
                       </span>
@@ -232,7 +233,7 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <button className="text-white hover:bg-white/10 relative p-2 rounded transition-colors">
+                  <button className="text-white hover:bg-white/10 relative p-2 rounded transition-colors hidden md:flex">
                     <Bell className="w-5 h-5" />
                     {unread > 0 && (
                       <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] bg-[#0d9488] text-white flex items-center justify-center">
@@ -248,7 +249,10 @@ export default function Navbar() {
                   <DropdownMenuItem onClick={markAllRead} className="text-xs text-blue-600 hover:underline p-0 h-auto bg-transparent cursor-pointer rounded-none">Mark all read</DropdownMenuItem>
                 </div>
                 <div className="max-h-72 overflow-y-auto">
-                  {notifications.slice(0, 5).map((n) => (
+                  {myNotifications.length === 0 && (
+                    <p className="px-3 py-4 text-sm text-gray-400 text-center">No notifications yet</p>
+                  )}
+                  {myNotifications.slice(0, 5).map((n) => (
                     <DropdownMenuItem
                       key={n.id}
                       render={
@@ -270,11 +274,11 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Wallet — all logged-in users, render after hydration so auth state is known */}
+            {/* Wallet — desktop only */}
             {hasHydrated && isAuthenticated && (
               <Link
                 href="/customer/profile/wallet"
-                className="text-white hover:bg-white/10 flex flex-col items-center px-2 py-1 rounded transition-colors"
+                className="text-white hover:bg-white/10 flex-col items-center px-2 py-1 rounded transition-colors hidden md:flex"
               >
                 <Wallet className="w-5 h-5" />
                 <span className="text-[10px] font-bold text-[#5eead4] leading-none mt-0.5">
@@ -283,8 +287,8 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Wishlist */}
-            <Link href="/customer/profile/wishlist">
+            {/* Wishlist — desktop only */}
+            <Link href="/customer/profile/wishlist" className="hidden md:block">
               <button className="text-white hover:bg-white/10 relative p-2 rounded transition-colors">
                 <Heart className="w-5 h-5" />
                 {wishlist.length > 0 && (

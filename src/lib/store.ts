@@ -187,7 +187,7 @@ export const useAuthStore = create<AuthStore>()(
 export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set, get) => ({
-      notifications: mockNotifications,
+      notifications: [],
       addNotification: (n) =>
         set((state) => ({
           notifications: [
@@ -214,7 +214,7 @@ export const useNotificationStore = create<NotificationStore>()(
       },
       unreadCount: () => get().notifications.filter((n) => !n.read).length,
     }),
-    { name: "notification-store", storage: ssrStorage }
+    { name: "notification-store-v2", storage: ssrStorage }
   )
 );
 

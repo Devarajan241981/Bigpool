@@ -1,0 +1,38 @@
+{
+  "name": "Bigpool - India's Favourite Marketplace",
+  "short_name": "Bigpool",
+  "description": "Shop millions of products from trusted sellers across India.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e293b",
+  "theme_color": "#0d9488",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "My Orders",
+      "url": "/customer/profile/orders",
+      "description": "View your orders"
+    },
+    {
+      "name": "My Cart",
+      "url": "/customer/cart",
+      "description": "View your cart"
+    }
+  ]
+}

@@ -80,7 +80,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden bg-gray-800 h-[340px] md:h-[420px]">
+      <div className="relative overflow-hidden bg-gray-800 h-[220px] sm:h-[300px] md:h-[420px]">
         {banners.map((banner, i) => (
           <div
             key={banner.id}
@@ -96,8 +96,8 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent flex items-center">
               <div className="max-w-7xl mx-auto px-6 text-white">
                 <Badge className="mb-3 bg-[#0d9488] text-white font-bold">SALE</Badge>
-                <h1 className="text-3xl md:text-5xl font-bold mb-3 max-w-lg">{banner.title}</h1>
-                <p className="text-lg text-gray-200 mb-6">{banner.subtitle}</p>
+                <h1 className="text-xl sm:text-3xl md:text-5xl font-bold mb-2 md:mb-3 max-w-lg">{banner.title}</h1>
+                <p className="text-sm sm:text-lg text-gray-200 mb-4 md:mb-6 hidden sm:block">{banner.subtitle}</p>
                 <Link href={banner.link}>
                   <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold px-8 py-3 text-base">
                     Shop Now
@@ -136,14 +136,14 @@ export default function HomePage() {
 
       {/* Trust badges */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex gap-4 overflow-x-auto md:grid md:grid-cols-4 scrollbar-hide">
           {[
             { icon: <Truck className="w-5 h-5 text-[#0d9488]" />, title: "Free Delivery", sub: "On orders above ₹499" },
             { icon: <Shield className="w-5 h-5 text-[#0d9488]" />, title: "Secure Payment", sub: "100% safe transactions" },
             { icon: <RotateCcw className="w-5 h-5 text-[#0d9488]" />, title: "Easy Returns", sub: "30-day return policy" },
             { icon: <Zap className="w-5 h-5 text-[#0d9488]" />, title: "24/7 Support", sub: "Dedicated customer care" },
           ].map((t, i) => (
-            <div key={i} className="flex items-center gap-3">
+            <div key={i} className="flex items-center gap-3 flex-shrink-0 md:flex-shrink">
               <div className="flex-shrink-0 bg-teal-50 p-2 rounded-lg">{t.icon}</div>
               <div>
                 <p className="text-sm font-semibold text-gray-800">{t.title}</p>
@@ -163,7 +163,7 @@ export default function HomePage() {
               See all
             </Link>
           </div>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 md:gap-3">
             {categories.map((cat) => (
               <Link
                 key={cat.id}
@@ -275,6 +275,26 @@ export default function HomePage() {
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
+        </section>
+
+        {/* Download App banner */}
+        <section className="bg-gradient-to-r from-[#1e293b] to-[#0d9488] rounded-xl p-5 text-white flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-xs font-semibold text-teal-300 uppercase tracking-wide mb-1">Now Available</p>
+            <h3 className="text-xl font-bold mb-1">Get the Bigpool App</h3>
+            <p className="text-sm text-gray-300 mb-3">Install on your phone for faster access, exclusive app-only deals & offline browsing.</p>
+            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+              <a
+                href="#install"
+                onClick={(e) => { e.preventDefault(); window.dispatchEvent(new Event("triggerInstallPrompt")); }}
+                className="bg-white text-[#1e293b] font-bold text-sm px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                📱 Install App
+              </a>
+              <span className="text-xs text-gray-400 self-center">• Works on Android & iPhone</span>
+            </div>
+          </div>
+          <div className="text-6xl">🛍️</div>
         </section>
 
         {/* Recently Viewed */}
