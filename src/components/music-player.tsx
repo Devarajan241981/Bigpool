@@ -7,9 +7,9 @@ import { Volume2, VolumeX } from "lucide-react";
 // In Supabase → Storage → create "music" bucket (public) → upload MP3s → copy URL.
 // Free vocals/lyrics: uppbeat.io  |  Free instrumentals: pixabay.com/music
 const TRACKS: string[] = [
-  // "https://xxxx.supabase.co/storage/v1/object/public/music/song1.mp3",
-  // "https://xxxx.supabase.co/storage/v1/object/public/music/song2.mp3",
-  // "https://xxxx.supabase.co/storage/v1/object/public/music/song3.mp3",
+  "https://okmejlnkhxqeevrypzvg.supabase.co/storage/v1/object/public/music/Arctic%20Monkeys%20-%20I%20Wanna%20Be%20Yours.mp3",
+  "https://okmejlnkhxqeevrypzvg.supabase.co/storage/v1/object/public/music/cloud-jeff-kaale-main-version-27255-02-57.mp3",
+  "https://okmejlnkhxqeevrypzvg.supabase.co/storage/v1/object/public/music/fassounds-escape-your-love-upbeat-fashion-pop-dance-412230.mp3",
 ];
 
 function randomTrack(current: number) {
