@@ -14,12 +14,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
 
-  const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
-  const order = await razorpay.orders.create({
-    amount: Math.round(amount * 100),
-    currency: "INR",
-    receipt: `order_${Date.now()}`,
-  });
-
-  return NextResponse.json(order);
+  try {
+    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100),
+      currency: "INR",
+      receipt: `order_${Date.now()}`,
+    });
+    return NextResponse.json(order);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Razorpay error";
+    return NextResponse.json({ error: msg }, { status: 502 });
+  }
 }
