@@ -789,6 +789,7 @@ export const mockVouchers: Voucher[] = [
     description: "₹200 off on your first order above ₹999",
     active: true,
     createdAt: "2026-01-01T00:00:00Z",
+    createdBy: "mock",
   },
   {
     id: "v2",
@@ -804,6 +805,7 @@ export const mockVouchers: Voucher[] = [
     description: "10% off (up to ₹500) on orders above ₹500",
     active: true,
     createdAt: "2026-03-01T00:00:00Z",
+    createdBy: "mock",
   },
   {
     id: "v3",
@@ -820,6 +822,7 @@ export const mockVouchers: Voucher[] = [
     description: "15% off on Electronics (up to ₹2,000) — min order ₹2,000",
     active: true,
     createdAt: "2026-04-01T00:00:00Z",
+    createdBy: "mock",
   },
   {
     id: "v4",
@@ -834,6 +837,7 @@ export const mockVouchers: Voucher[] = [
     description: "Free delivery on any order — no minimum",
     active: true,
     createdAt: "2026-02-01T00:00:00Z",
+    createdBy: "mock",
   },
   {
     id: "v5",
@@ -850,6 +854,7 @@ export const mockVouchers: Voucher[] = [
     description: "20% off on Fashion (up to ₹1,000) — min order ₹800",
     active: true,
     createdAt: "2026-05-01T00:00:00Z",
+    createdBy: "mock",
   },
   {
     id: "v6",
@@ -864,6 +869,7 @@ export const mockVouchers: Voucher[] = [
     description: "₹500 flat off on orders above ₹2,500 — Limited offer",
     active: false,
     createdAt: "2026-04-15T00:00:00Z",
+    createdBy: "mock",
   },
 ];
 

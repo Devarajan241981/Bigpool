@@ -152,7 +152,7 @@ export interface PromotionRequest {
   createdAt: string;
 }
 
-export type WalletTxType = "credit" | "debit" | "refund" | "cashback" | "cancellation_refund";
+export type WalletTxType = "credit" | "debit" | "refund" | "cashback" | "cancellation_refund" | "withdrawal";
 
 export interface WalletTransaction {
   id: string;
@@ -218,6 +218,8 @@ export interface Voucher {
   description: string;
   active: boolean;
   createdAt: string;
+  /** "mock" = demo placeholder, undefined/sellerId = real vendor coupon */
+  createdBy?: string;
 }
 
 // ─── Cashback ─────────────────────────────────────────────────────────────────

@@ -223,7 +223,7 @@ interface WalletStore {
   balance: number;
   transactions: WalletTransaction[];
   credit: (amount: number, description: string, orderId?: string, type?: WalletTransaction["type"]) => void;
-  debit: (amount: number, description: string, orderId?: string) => boolean;
+  debit: (amount: number, description: string, orderId?: string, type?: WalletTransaction["type"]) => boolean;
   refundCancellation: (orderId: string, paid: number, status: "packed" | "shipped" | "out_for_delivery") => number;
 }
 
@@ -247,14 +247,14 @@ export const useWalletStore = create<WalletStore>()(
             ...state.transactions,
           ],
         })),
-      debit: (amount, description, orderId) => {
+      debit: (amount, description, orderId, type = "debit") => {
         if (get().balance < amount) return false;
         set((state) => ({
           balance: state.balance - amount,
           transactions: [
             {
               id: `tx_${Date.now()}`,
-              type: "debit",
+              type,
               amount,
               description,
               orderId,
@@ -287,7 +287,7 @@ export const useWalletStore = create<WalletStore>()(
         return refundAmt;
       },
     }),
-    { name: "wallet-store", storage: ssrStorage }
+    { name: "wallet-store-v2", storage: ssrStorage }
   )
 );
 
@@ -621,6 +621,7 @@ export const useVoucherStore = create<VoucherStore>()(
           (v) => v.code.toUpperCase() === code.toUpperCase() && v.active
         );
         if (!voucher) return { success: false, message: "Invalid or expired voucher code." };
+        if (voucher.createdBy === "mock") return { success: false, message: "This is a demo coupon and cannot be applied to real orders." };
 
         const now = new Date();
         if (new Date(voucher.validUntil) < now)

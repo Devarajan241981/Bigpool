@@ -15,8 +15,10 @@ function VoucherCard({ voucher }: { voucher: Voucher }) {
   const expired = new Date(voucher.validUntil) < new Date();
   const full = voucher.usedCount >= voucher.maxUses;
   const unavailable = expired || full || !voucher.active;
+  const isDemo = voucher.createdBy === "mock";
 
   const copy = () => {
+    if (isDemo) { toast.error("This is a demo coupon — not valid for real orders."); return; }
     navigator.clipboard.writeText(voucher.code).then(() => {
       setCopied(true);
       toast.success(`Copied "${voucher.code}" to clipboard!`);
@@ -37,7 +39,22 @@ function VoucherCard({ voucher }: { voucher: Voucher }) {
   }[voucher.type];
 
   return (
-    <div className={`bg-white rounded-xl border-2 overflow-hidden transition-all ${unavailable ? "opacity-50 border-gray-200" : "border-gray-200 hover:border-[#0d9488] hover:shadow-md"}`}>
+    <div className={`bg-white rounded-xl border-2 overflow-hidden transition-all relative ${
+      isDemo ? "border-gray-200 opacity-70" :
+      unavailable ? "opacity-50 border-gray-200" :
+      "border-gray-200 hover:border-[#0d9488] hover:shadow-md"
+    }`}>
+      {/* Demo overlay banner */}
+      {isDemo && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="bg-gray-900/60 backdrop-blur-[2px] rounded-xl absolute inset-0" />
+          <div className="relative z-20 text-center px-4">
+            <p className="text-white text-xs font-semibold">Demo Coupon</p>
+            <p className="text-gray-300 text-[10px] mt-0.5">Only coupons from verified vendors are valid</p>
+          </div>
+        </div>
+      )}
+
       {/* Ticket-style left band */}
       <div className="flex">
         <div className={`${typeColor} text-white flex items-center justify-center px-3 py-4 min-w-[80px] writing-mode-vertical`}>
@@ -52,8 +69,11 @@ function VoucherCard({ voucher }: { voucher: Voucher }) {
           <div className="flex items-start justify-between gap-2 mb-1.5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-gray-900 tracking-widest text-base">{voucher.code}</span>
-                {unavailable && (
+                <span className={`font-mono font-bold tracking-widest text-base ${isDemo ? "blur-sm select-none text-gray-900" : "text-gray-900"}`}>
+                  {isDemo ? "XXXXXXXX" : voucher.code}
+                </span>
+                {isDemo && <Badge className="bg-gray-100 text-gray-500 text-[10px]">Demo</Badge>}
+                {!isDemo && unavailable && (
                   <Badge className="bg-red-100 text-red-600 text-[10px]">
                     {expired ? "Expired" : full ? "Limit Reached" : "Inactive"}
                   </Badge>
@@ -63,9 +83,9 @@ function VoucherCard({ voucher }: { voucher: Voucher }) {
             </div>
             <button
               onClick={copy}
-              disabled={unavailable}
-              className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${unavailable ? "opacity-40 cursor-not-allowed" : "hover:bg-teal-50 text-[#0d9488]"}`}
-              title="Copy code"
+              disabled={unavailable || isDemo}
+              className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${unavailable || isDemo ? "opacity-40 cursor-not-allowed" : "hover:bg-teal-50 text-[#0d9488]"}`}
+              title={isDemo ? "Demo coupon — not usable" : "Copy code"}
             >
               {copied ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -85,11 +105,15 @@ function VoucherCard({ voucher }: { voucher: Voucher }) {
           </div>
 
           <div className="mt-3">
-            <Link href="/customer/checkout">
-              <Button size="sm" disabled={unavailable} className="bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs h-7 px-3">
-                Apply at checkout
-              </Button>
-            </Link>
+            {isDemo ? (
+              <p className="text-[11px] text-gray-400 italic">Available once vendors add real coupons</p>
+            ) : (
+              <Link href="/customer/checkout">
+                <Button size="sm" disabled={unavailable} className="bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs h-7 px-3">
+                  Apply at checkout
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

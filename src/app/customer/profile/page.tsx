@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import {
   User, Package, Heart, RotateCcw, Bell, Settings,
   LogOut, ChevronRight, Edit3, MapPin, Phone, Mail, Camera, Smartphone, Wallet,
+  HelpCircle, Store, Clock, CheckCircle, XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore, useOrderStore } from "@/lib/store";
+import { useAuthStore, useOrderStore, useSellerApplicationStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -25,6 +26,8 @@ const navItems = [
 export default function ProfilePage() {
   const { user, isAuthenticated, logout, updateUser } = useAuthStore();
   const { orders, fetchOrders } = useOrderStore();
+  const { applications } = useSellerApplicationStore();
+  const myApps = applications.filter((a) => a.email === (user?.email ?? ""));
   const router = useRouter();
   const [editing, setEditing] = useState(false);
 
@@ -98,6 +101,7 @@ export default function ProfilePage() {
           { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
           { href: "/customer/profile/notifications", icon: Bell, label: "Alerts", color: "text-teal-600 bg-teal-50" },
           { href: "/customer/profile/settings", icon: Settings, label: "Settings", color: "text-gray-600 bg-gray-100" },
+          { href: "/customer/help", icon: HelpCircle, label: "Help", color: "text-orange-600 bg-orange-50" },
         ].map((item) => (
           <Link key={item.href} href={item.href}>
             <div className="bg-white border border-gray-200 rounded-xl p-3 text-center hover:shadow-sm transition-shadow active:scale-95">
@@ -284,6 +288,61 @@ export default function ProfilePage() {
               </Link>
             ))}
           </div>
+
+          {/* My Applications */}
+          {myApps.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 py-3 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Store className="w-4 h-4 text-[#0d9488]" />
+                  <h3 className="font-semibold text-sm text-gray-900">My Vendor Applications</h3>
+                </div>
+                <Link href="/vendor/application/signup" className="text-xs text-[#0d9488] font-medium hover:underline">
+                  + New
+                </Link>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {myApps.map((app) => (
+                  <div key={app.id} className="flex items-center gap-3 px-4 py-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      app.status === "approved" ? "bg-green-100" : app.status === "rejected" ? "bg-red-100" : "bg-amber-100"
+                    }`}>
+                      {app.status === "approved" ? <CheckCircle className="w-4 h-4 text-green-600" /> :
+                       app.status === "rejected" ? <XCircle className="w-4 h-4 text-red-600" /> :
+                       <Clock className="w-4 h-4 text-amber-600 animate-pulse" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{app.businessName}</p>
+                      <p className="text-xs text-gray-400">{app.category} · Applied {app.submittedAt}</p>
+                    </div>
+                    <Badge className={`text-[10px] capitalize flex-shrink-0 ${
+                      app.status === "approved" ? "bg-green-100 text-green-700" :
+                      app.status === "rejected" ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>
+                      {app.status === "pending" ? "Under Review" : app.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sell on Bigpool CTA — if no applications yet */}
+          {myApps.length === 0 && (
+            <Link href="/vendor/application/signup">
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
+                <div className="bg-indigo-100 rounded-xl p-2.5 flex-shrink-0">
+                  <Store className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900">Start Selling on Bigpool</p>
+                  <p className="text-xs text-gray-500 mt-0.5">0% commission for first 3 months · Apply in 5 minutes</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              </div>
+            </Link>
+          )}
 
           {/* Download App card */}
           <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] rounded-xl p-5 text-white flex items-center gap-4">

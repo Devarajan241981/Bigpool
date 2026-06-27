@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Building2, Mail, Phone, User, FileText, CheckCircle, Store } from "lucide-react";
+import { Building2, Mail, Phone, User, FileText, CheckCircle, Store, Clock, XCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,92 @@ const steps = ["Personal Info", "Business Info", "Documents", "Review"];
 
 export default function VendorApplicationPage() {
   const { user, isAuthenticated } = useAuthStore();
-  const { submit } = useSellerApplicationStore();
+  const { applications, submit } = useSellerApplicationStore();
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [applyAnother, setApplyAnother] = useState(false);
+
+  // Applications submitted by this user (matched by email)
+  const myApps = applications.filter((a) => a.email === (user?.email ?? ""));
+  const activeApp = myApps.find((a) => a.status === "pending" || a.status === "approved");
+
+  // Show status screen if they already have an active application
+  if (activeApp && !submitted && !applyAnother) {
+    const timeline = [
+      { label: "Application Submitted", done: true, date: activeApp.submittedAt },
+      { label: "Admin Review in Progress", done: activeApp.status !== "pending", active: activeApp.status === "pending" },
+      { label: activeApp.status === "approved" ? "Application Approved ✓" : "Decision", done: activeApp.status === "approved", pending: activeApp.status === "pending" },
+    ];
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="text-center mb-6">
+              {activeApp.status === "approved" ? (
+                <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-3" />
+              ) : (
+                <Clock className="w-14 h-14 text-amber-400 mx-auto mb-3" />
+              )}
+              <h1 className="text-xl font-bold text-gray-900">
+                {activeApp.status === "approved" ? "Application Approved!" : "Application Under Review"}
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                {activeApp.businessName} · {activeApp.category}
+              </p>
+            </div>
+
+            {/* Timeline */}
+            <div className="space-y-4 mb-6">
+              {timeline.map((step, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    step.done ? "bg-green-500" : step.active ? "bg-amber-400" : "bg-gray-200"
+                  }`}>
+                    {step.done ? (
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    ) : step.active ? (
+                      <Clock className="w-4 h-4 text-white animate-pulse" />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full bg-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className={`text-sm font-medium ${step.done ? "text-gray-900" : step.active ? "text-amber-700" : "text-gray-400"}`}>
+                      {step.label}
+                    </p>
+                    {step.date && <p className="text-xs text-gray-400 mt-0.5">Submitted on {step.date}</p>}
+                    {step.active && <p className="text-xs text-amber-600 mt-0.5">Usually takes 2–3 business days</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {activeApp.status === "approved" ? (
+              <Link href="/vendor/login">
+                <Button className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white font-bold h-11">
+                  Go to Vendor Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-4">
+                You'll be notified by email once admin reviews your application. Check your notifications in the profile section.
+              </div>
+            )}
+
+            <button
+              onClick={() => setApplyAnother(true)}
+              className="mt-3 w-full flex items-center justify-center gap-1.5 text-xs text-[#0d9488] hover:underline font-medium py-2"
+            >
+              <Plus className="w-3.5 h-3.5" /> Apply for a different product category
+            </button>
+            <Link href="/customer/profile" className="mt-1 block text-center text-xs text-gray-400 hover:underline">
+              Back to Profile
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [form, setForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
