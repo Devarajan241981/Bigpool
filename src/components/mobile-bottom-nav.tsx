@@ -13,7 +13,7 @@ export default function MobileBottomNav() {
 
   const tabs = [
     { href: "/", icon: Home, label: "Home" },
-    { href: "/customer/products", icon: Search, label: "Search" },
+    { href: "/customer/search", icon: Search, label: "Search" },
     { href: "/customer/cart", icon: ShoppingCart, label: "Cart", badge: hasHydrated ? cartCount : 0 },
     { href: "/customer/profile", icon: User, label: "Profile" },
   ];

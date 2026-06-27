@@ -72,30 +72,30 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full">
       {/* Top bar */}
       <div className="bg-[#1e293b] text-white px-4 py-2">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          {/* Logo — image only, no text */}
+        <div className="max-w-7xl mx-auto flex items-center gap-2">
+          {/* Logo — image only, blend away dark background */}
           <Link href="/" className="flex-shrink-0">
             <img
               src="/logo.png"
               alt="Bigpool"
-              width={40}
-              height={40}
-              style={{ mixBlendMode: "screen", display: "block" }}
+              width={38}
+              height={38}
+              style={{ mixBlendMode: "lighten", display: "block" }}
             />
           </Link>
 
-          {/* Search */}
-          <div ref={searchRef} className="flex-1 mx-2 md:mx-4 relative">
+          {/* Search — desktop only; mobile uses /customer/search page */}
+          <div ref={searchRef} className="hidden md:block flex-1 mx-3 relative">
             <form onSubmit={handleSearch}>
-              <div className="flex w-full rounded-md overflow-hidden">
-                <select className="bg-[#f3f3f3] text-black text-sm px-3 border-r border-gray-300 outline-none hidden md:block">
+              <div className="flex w-full rounded-full overflow-hidden shadow-inner">
+                <select className="bg-[#f3f3f3] text-black text-xs px-2.5 border-r border-gray-300 outline-none">
                   <option>All</option>
                   {categories.map((c) => (
                     <option key={c.id}>{c.name}</option>
                   ))}
                 </select>
                 <Input
-                  className="flex-1 rounded-none border-0 h-10 text-sm focus-visible:ring-0"
+                  className="flex-1 rounded-none border-0 h-9 text-sm focus-visible:ring-0 px-3"
                   style={{ backgroundColor: "white", color: "black" }}
                   placeholder="Search products, brands and more..."
                   value={search}
@@ -103,8 +103,8 @@ export default function Navbar() {
                   onFocus={() => setShowSuggestions(true)}
                   autoComplete="off"
                 />
-                <button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] px-4 flex items-center">
-                  <Search className="w-5 h-5 text-white" />
+                <button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] px-3 flex items-center">
+                  <Search className="w-4 h-4 text-white" />
                 </button>
               </div>
             </form>
@@ -162,8 +162,8 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
+          {/* Right actions — ml-auto on mobile pushes everything to far right */}
+          <div className="flex items-center gap-1 ml-auto flex-shrink-0">
             {/* User Menu — hidden on mobile (handled by bottom nav profile tab) */}
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -312,8 +312,8 @@ export default function Navbar() {
               </button>
             </Link>
 
-            {/* Cart */}
-            <Link href="/customer/cart">
+            {/* Cart — desktop shows label, mobile icon only (bottom nav has cart too) */}
+            <Link href="/customer/cart" className="hidden md:block">
               <button className="text-white hover:bg-white/10 relative flex items-center gap-1 px-2 py-1.5 rounded transition-colors">
                 <ShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
@@ -321,7 +321,7 @@ export default function Navbar() {
                     {cartCount}
                   </Badge>
                 )}
-                <span className="hidden sm:block text-sm font-bold">Cart</span>
+                <span className="text-sm font-bold">Cart</span>
               </button>
             </Link>
 
@@ -357,16 +357,10 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile nav */}
+      {/* Mobile nav — categories only, no search (search has its own page) */}
       {mobileOpen && (
         <div className="bg-[#334155] text-white md:hidden">
-          <form onSubmit={handleSearch} className="flex p-3 gap-2">
-            <Input className="flex-1 bg-white text-black h-9" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white h-9 px-3">
-              <Search className="w-4 h-4" />
-            </Button>
-          </form>
-          <div className="grid grid-cols-2 gap-0.5 px-3 pb-3">
+          <div className="grid grid-cols-2 gap-0.5 px-3 py-3">
             {categories.map((cat) => (
               <Link key={cat.id} href={`/customer/products?category=${cat.slug}`} className="text-sm py-2 px-2 hover:text-[#0d9488]" onClick={() => setMobileOpen(false)}>
                 {cat.name}
