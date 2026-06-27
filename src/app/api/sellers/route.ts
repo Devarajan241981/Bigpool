@@ -1,9 +1,8 @@
 import { getDb } from "@/lib/supabase";
-import { sellers as mockSellers } from "@/lib/mock-data";
 
 export async function GET() {
   const db = getDb();
-  if (!db) return Response.json(mockSellers);
+  if (!db) return Response.json([]);
 
   const { data, error } = await db
     .from("users")

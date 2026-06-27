@@ -47,7 +47,7 @@ export default function SuperAdminLoginPage() {
             <Shield className="w-8 h-8 text-[#0d9488]" />
           </div>
           <Link href="/" className="inline-block">
-            <div className="text-2xl font-extrabold"><span className="text-gray-900">Shop</span><span className="text-[#0d9488]">Hub</span></div>
+            <img src="/logo.png" alt="Bigpool" width={48} height={48} style={{ mixBlendMode: "multiply" }} />
           </Link>
           <h1 className="text-xl font-bold text-gray-900 mt-1">Super Admin Portal</h1>
           <p className="text-gray-500 text-xs mt-0.5">bigpool.com/superadmin/login</p>

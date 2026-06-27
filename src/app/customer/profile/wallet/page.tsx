@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Wallet, ArrowDownLeft, ArrowUpRight, RefreshCcw, Gift, AlertCircle, Plus, X, Banknote, Building2 } from "lucide-react";
+import { Wallet, ArrowDownLeft, ArrowUpRight, RefreshCcw, Gift, AlertCircle, Plus, X, Banknote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,151 +180,19 @@ function AddMoneyModal({ onClose, onSuccess }: { onClose: () => void; onSuccess:
   );
 }
 
-type WithdrawMethod = "upi" | "bank";
-
-function WithdrawModal({ balance, onClose, onSuccess }: { balance: number; onClose: () => void; onSuccess: (amt: number, dest: string) => void }) {
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState<WithdrawMethod>("upi");
-  const [upi, setUpi] = useState("");
-  const [accNo, setAccNo] = useState("");
-  const [ifsc, setIfsc] = useState("");
-  const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const amt = parseInt(amount) || 0;
-  const upiValid = /^[\w.\-+]+@[\w]+$/.test(upi.trim());
-  const bankValid = accNo.trim().length >= 9 && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc.trim().toUpperCase()) && name.trim().length >= 2;
-  const canSubmit = amt >= 10 && amt <= balance && (method === "upi" ? upiValid : bankValid);
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    const dest = method === "upi" ? upi.trim() : `${accNo.trim()} (${ifsc.trim().toUpperCase()})`;
-    onSuccess(amt, dest);
-    onClose();
-    setLoading(false);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
-      <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl p-6">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold text-gray-900">Withdraw Money</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-        </div>
-
-        <p className="text-xs text-gray-500 mb-4">Available: <span className="font-bold text-gray-800">₹{balance.toLocaleString()}</span></p>
-
-        {/* Amount */}
-        <div className="mb-4">
-          <label className="text-xs font-semibold text-gray-600 mb-2 block">Amount (₹)</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
-            <Input
-              type="number"
-              min={10}
-              max={balance}
-              placeholder="0"
-              className="pl-8 text-xl font-bold h-12"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              autoFocus
-            />
-          </div>
-          {amt > balance && <p className="text-xs text-red-500 mt-1">Exceeds available balance</p>}
-          <div className="flex gap-2 mt-2 flex-wrap">
-            {[100, 500, 1000].filter(p => p <= balance).map((p) => (
-              <button key={p} onClick={() => setAmount(String(p))}
-                className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${amount === String(p) ? "bg-[#0d9488] text-white border-[#0d9488]" : "border-gray-200 text-gray-600 hover:border-[#0d9488]"}`}>
-                ₹{p.toLocaleString()}
-              </button>
-            ))}
-            {balance > 0 && (
-              <button onClick={() => setAmount(String(balance))}
-                className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${amount === String(balance) ? "bg-[#0d9488] text-white border-[#0d9488]" : "border-gray-200 text-gray-600 hover:border-[#0d9488]"}`}>
-                All (₹{balance.toLocaleString()})
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Method tabs */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setMethod("upi")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors ${method === "upi" ? "bg-[#0d9488] text-white border-[#0d9488]" : "border-gray-200 text-gray-600"}`}
-          >
-            <Banknote className="w-4 h-4" /> UPI
-          </button>
-          <button
-            onClick={() => setMethod("bank")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-colors ${method === "bank" ? "bg-[#0d9488] text-white border-[#0d9488]" : "border-gray-200 text-gray-600"}`}
-          >
-            <Building2 className="w-4 h-4" /> Bank Account
-          </button>
-        </div>
-
-        {method === "upi" ? (
-          <div className="mb-5">
-            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">UPI ID</label>
-            <Input placeholder="yourname@upi" value={upi} onChange={(e) => setUpi(e.target.value)} className="h-10" />
-            {upi && !upiValid && <p className="text-xs text-red-500 mt-1">Enter a valid UPI ID (e.g. name@okaxis)</p>}
-          </div>
-        ) : (
-          <div className="space-y-3 mb-5">
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Account Holder Name</label>
-              <Input placeholder="Full name as per bank" value={name} onChange={(e) => setName(e.target.value)} className="h-10" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Account Number</label>
-              <Input placeholder="Enter account number" value={accNo} onChange={(e) => setAccNo(e.target.value)} className="h-10" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">IFSC Code</label>
-              <Input placeholder="e.g. SBIN0001234" value={ifsc} onChange={(e) => setIfsc(e.target.value.toUpperCase())} className="h-10 uppercase" />
-            </div>
-          </div>
-        )}
-
-        <Button
-          className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white font-bold h-12"
-          onClick={handleSubmit}
-          disabled={!canSubmit || loading}
-        >
-          {loading ? "Submitting..." : `Withdraw ₹${amt.toLocaleString() || "0"}`}
-        </Button>
-        <p className="text-center text-xs text-gray-400 mt-3">Processed within 1–3 business days · Mon–Sat</p>
-      </div>
-    </div>
-  );
-}
 
 export default function WalletPage() {
   const { user, isAuthenticated } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
-  const { balance, transactions, credit, debit } = useWalletStore(); // credit used for Add Money, debit for Withdraw
+  const { balance, transactions, credit } = useWalletStore();
   const { addNotification } = useNotificationStore();
   const [showAddMoney, setShowAddMoney] = useState(false);
-  const [showWithdraw, setShowWithdraw] = useState(false);
 
   useEffect(() => {
     if (hasHydrated && !isAuthenticated) router.push("/customer/login");
   }, [hasHydrated, isAuthenticated, router]);
   if (!hasHydrated || !isAuthenticated) return null;
-
-  const handleWithdraw = (amt: number, dest: string) => {
-    debit(amt, `Withdrawal to ${dest}`, undefined, "withdrawal");
-    addNotification({
-      userId: user!.id,
-      title: "Withdrawal Requested",
-      message: `₹${amt.toLocaleString()} withdrawal to ${dest} is being processed (1–3 business days).`,
-      type: "order",
-      link: "/customer/profile/wallet",
-    });
-    toast.success(`₹${amt.toLocaleString()} withdrawal submitted! Arrives in 1–3 business days.`);
-  };
 
   const handleSuccess = (amt: number) => {
     credit(amt, `Added ₹${amt.toLocaleString()} via Razorpay`, undefined, "credit");
@@ -355,14 +223,6 @@ export default function WalletPage() {
             onClick={() => setShowAddMoney(true)}
           >
             <Plus className="w-3.5 h-3.5" /> Add Money
-          </Button>
-          <Button
-            size="sm"
-            className="bg-white/20 text-white hover:bg-white/30 font-semibold gap-1.5 h-9 border border-white/30"
-            onClick={() => setShowWithdraw(true)}
-            disabled={balance < 10}
-          >
-            <Banknote className="w-3.5 h-3.5" /> Withdraw
           </Button>
         </div>
       </div>
@@ -447,9 +307,7 @@ export default function WalletPage() {
       {showAddMoney && (
         <AddMoneyModal onClose={() => setShowAddMoney(false)} onSuccess={handleSuccess} />
       )}
-      {showWithdraw && (
-        <WithdrawModal balance={balance} onClose={() => setShowWithdraw(false)} onSuccess={handleWithdraw} />
-      )}
+
     </div>
   );
 }

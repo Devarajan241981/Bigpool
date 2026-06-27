@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
-import { promotionRequests } from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -8,12 +7,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
 
   const db = getDb();
-  if (!db) {
-    let results = [...promotionRequests];
-    if (sellerId) results = results.filter((r) => r.sellerId === sellerId);
-    if (status) results = results.filter((r) => r.status === status);
-    return Response.json(results);
-  }
+  if (!db) return Response.json([]);
 
   let query = db.from("promotion_requests").select("*").order("created_at", { ascending: false });
   if (sellerId) query = query.eq("seller_id", sellerId);

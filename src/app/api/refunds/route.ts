@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
-import { mockRefunds } from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -8,12 +7,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
 
   const db = getDb();
-  if (!db) {
-    let results = [...mockRefunds];
-    if (customerId) results = results.filter((r) => r.customerId === customerId);
-    if (status) results = results.filter((r) => r.status === status);
-    return Response.json(results);
-  }
+  if (!db) return Response.json([]);
 
   let query = db.from("refund_requests").select("*").order("created_at", { ascending: false });
   if (customerId) query = query.eq("customer_id", customerId);

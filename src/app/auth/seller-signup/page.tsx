@@ -71,10 +71,7 @@ export default function SellerSignupPage() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-6">
           <Link href="/" className="inline-block">
-            <div className="text-3xl font-extrabold">
-              <span className="text-gray-900">Shop</span>
-              <span className="text-[#0d9488]">Hub</span>
-            </div>
+            <img src="/logo.png" alt="Bigpool" width={48} height={48} style={{ mixBlendMode: "multiply" }} />
           </Link>
           <p className="text-gray-600 text-sm mt-1">Seller Registration</p>
         </div>

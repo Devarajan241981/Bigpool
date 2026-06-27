@@ -24,7 +24,9 @@ export default function Navbar() {
   const [search, setSearch] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
   const searchRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
   const { products } = useProductStore();
   const { items: recentlyViewed } = useRecentlyViewedStore();
 
@@ -46,6 +48,21 @@ export default function Navbar() {
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y > lastScrollY.current && y > 60) {
+        setNavVisible(false);
+        setMobileOpen(false);
+      } else {
+        setNavVisible(true);
+      }
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
   const hasHydrated = useHasHydrated();
   const { items } = useCartStore();
@@ -69,7 +86,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className={`sticky top-0 z-50 w-full transition-transform duration-300 ease-in-out ${navVisible ? "translate-y-0" : "-translate-y-full md:translate-y-0"}`}>
       {/* Top bar */}
       <div className="bg-[#1e293b] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto flex items-center gap-2">

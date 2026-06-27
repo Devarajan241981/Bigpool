@@ -3,9 +3,9 @@ import { getDb } from "@/lib/supabase";
 
 // Demo accounts — used only when Supabase is not configured
 const DEMO_ACCOUNTS = [
-  { id: "c1", name: "John Doe",     email: "customer@demo.com", password: "demo123", role: "customer" as const },
-  { id: "v1", name: "TechWorld Store", email: "vendor@demo.com", password: "demo123", role: "seller" as const },
-  { id: "a1", name: "Admin",        email: "admin@demo.com",    password: "demo123", role: "admin" as const },
+  { id: "c1", name: "John Doe",        email: "customer@demo.com", password: "demo123", role: "customer" as const },
+  { id: "v1", name: "TechWorld Store", email: "vendor@demo.com",   password: "demo123", role: "seller"   as const },
+  { id: "a1", name: "Super Admin",     email: "admin@demo.com",    password: "demo123", role: "admin"    as const },
 ];
 
 export async function POST(request: NextRequest) {
@@ -14,12 +14,34 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Email and password are required." }, { status: 400 });
   }
 
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // ── Admin credentials from env vars (always checked first, regardless of Supabase) ──
+  const adminEmail    = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminName     = process.env.ADMIN_NAME ?? "Super Admin";
+
+  if (adminEmail && adminPassword && normalizedEmail === adminEmail && password === adminPassword) {
+    return Response.json({
+      user: {
+        id: "admin-1",
+        name: adminName,
+        email: adminEmail,
+        role: "admin",
+        createdAt: "2024-01-01",
+        avatar: undefined,
+        phone: undefined,
+        address: undefined,
+      },
+    });
+  }
+
   const db = getDb();
 
   if (!db) {
     // Fallback: check demo accounts
     const demo = DEMO_ACCOUNTS.find(
-      (a) => a.email === email.toLowerCase() && a.password === password
+      (a) => a.email === normalizedEmail && a.password === password
     );
     if (!demo) {
       return Response.json({ error: "Invalid email or password." }, { status: 401 });
