@@ -8,6 +8,7 @@ import StoreHydrator from "@/components/store-hydrator";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import InstallPrompt from "@/components/install-prompt";
 import PwaRegister from "@/components/pwa-register";
+import PushPermission from "@/components/push-permission";
 import SplashScreen from "@/components/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/error-boundary";
@@ -37,7 +38,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ backgroundColor: "#1e293b" }}>
       <head>
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" href="/favicon.png" />
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geist.className} bg-gray-100 min-h-screen flex flex-col`}>
         <SplashScreen />
         <PwaRegister />
+        <PushPermission />
         <StoreHydrator />
         <Navbar />
         <main className="flex-1 pb-16 md:pb-0">

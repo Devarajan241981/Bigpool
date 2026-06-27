@@ -70,6 +70,17 @@ function OrdersContent() {
         type: "refund",
         link: "/customer/profile/refunds",
       });
+      // Send real push notification
+      fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          title: "Order Cancelled",
+          body: `₹${refundAmount.toLocaleString()} refund initiated for order #${orderId}`,
+          url: "/customer/profile/refunds",
+        }),
+      }).catch(() => {});
     }
     toast.success(`Order cancelled. ₹${Math.round((order?.total ?? 0) * (1 - deductPct)).toLocaleString()} refund initiated.`);
   };
