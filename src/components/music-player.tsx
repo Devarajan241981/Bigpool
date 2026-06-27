@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 
-// Drop your MP3 files in /public/music/ and list them here.
+// Paste your Supabase Storage public URLs here.
+// In Supabase → Storage → create "music" bucket (public) → upload MP3s → copy URL.
 // Free vocals/lyrics: uppbeat.io  |  Free instrumentals: pixabay.com/music
-const TRACKS = [
-  "/music/track1.mp3",
-  "/music/track2.mp3",
-  "/music/track3.mp3",
+const TRACKS: string[] = [
+  // "https://xxxx.supabase.co/storage/v1/object/public/music/song1.mp3",
+  // "https://xxxx.supabase.co/storage/v1/object/public/music/song2.mp3",
+  // "https://xxxx.supabase.co/storage/v1/object/public/music/song3.mp3",
 ];
 
 function randomTrack(current: number) {
@@ -19,6 +20,8 @@ function randomTrack(current: number) {
 }
 
 export default function MusicPlayer() {
+  // Hide button entirely if no tracks are configured yet
+  if (TRACKS.length === 0) return null;
   const [on, setOn] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const idxRef = useRef<number>(-1);
