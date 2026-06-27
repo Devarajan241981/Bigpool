@@ -18,19 +18,16 @@ export async function POST(request: Request) {
 
   const db = getDb();
   if (db) {
-    // Check token exists in DB (not revoked)
+    // Check token exists in DB — the only invalidation is an explicit logout
+    // which deletes the row. No time-based expiry.
     const { data } = await db
       .from("refresh_tokens")
-      .select("id, expires_at")
+      .select("id")
       .eq("token", rawToken)
       .single();
 
     if (!data) {
       return NextResponse.json({ error: "Session revoked. Please log in again." }, { status: 401 });
-    }
-    if (Date.now() > data.expires_at) {
-      await db.from("refresh_tokens").delete().eq("token", rawToken);
-      return NextResponse.json({ error: "Session expired. Please log in again." }, { status: 401 });
     }
   }
 

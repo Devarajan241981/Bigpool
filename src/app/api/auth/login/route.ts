@@ -36,16 +36,17 @@ function buildResponse(user: {
 
   const res = NextResponse.json({ user, accessToken });
 
-  // httpOnly cookie — JS cannot read this (XSS safe)
+  // httpOnly cookie — JS cannot read this (XSS safe).
+  // 1-year maxAge: session stays alive until user explicitly logs out.
   res.cookies.set("bp_refresh", refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 365, // 1 year
   });
 
-  // Store refresh token in DB (non-blocking)
+  // Store refresh token in DB — no expires_at, token is valid until logout
   const db = getDb();
   if (db) {
     db.from("refresh_tokens").insert({
@@ -53,7 +54,6 @@ function buildResponse(user: {
       user_id: user.id,
       email: user.email,
       token: refreshToken,
-      expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000,
     }).then(() => {});
   }
 

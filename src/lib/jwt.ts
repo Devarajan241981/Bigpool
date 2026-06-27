@@ -15,7 +15,8 @@ export function signAccessToken(payload: JWTPayload): string {
 }
 
 export function signRefreshToken(payload: JWTPayload): string {
-  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: "7d" });
+  // No expiresIn — token is valid until logout deletes it from the DB
+  return jwt.sign(payload, REFRESH_SECRET);
 }
 
 export function verifyAccessToken(token: string): JWTPayload | null {
