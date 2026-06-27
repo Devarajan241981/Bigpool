@@ -73,16 +73,19 @@ export default function Navbar() {
       {/* Top bar */}
       <div className="bg-[#1e293b] text-white px-4 py-2">
         <div className="max-w-7xl mx-auto flex items-center gap-3">
-          {/* Logo */}
+          {/* Logo — image only, no text */}
           <Link href="/" className="flex-shrink-0">
-            <div className="text-xl md:text-2xl font-extrabold tracking-tight select-none">
-              <span className="text-white logo-big">Big</span>
-              <span className="text-[#0d9488] logo-pool relative">pool</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Bigpool"
+              width={40}
+              height={40}
+              style={{ mixBlendMode: "screen", display: "block" }}
+            />
           </Link>
 
           {/* Search */}
-          <div ref={searchRef} className="flex-1 max-w-3xl mx-2 md:mx-4 relative">
+          <div ref={searchRef} className="flex-1 mx-2 md:mx-4 relative">
             <form onSubmit={handleSearch}>
               <div className="flex w-full rounded-md overflow-hidden">
                 <select className="bg-[#f3f3f3] text-black text-sm px-3 border-r border-gray-300 outline-none hidden md:block">
@@ -92,7 +95,8 @@ export default function Navbar() {
                   ))}
                 </select>
                 <Input
-                  className="flex-1 rounded-none border-0 bg-white text-black h-10 text-sm focus-visible:ring-0"
+                  className="flex-1 rounded-none border-0 h-10 text-sm focus-visible:ring-0"
+                  style={{ backgroundColor: "white", color: "black" }}
                   placeholder="Search products, brands and more..."
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
@@ -230,7 +234,15 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Notifications */}
+            {/* Notifications — bell visible on all sizes; mobile links to page, desktop opens dropdown */}
+            <Link href="/customer/profile/notifications" className="md:hidden relative p-2 flex text-white hover:bg-white/10 rounded transition-colors" onClick={markAllRead}>
+              <Bell className="w-5 h-5" />
+              {unread > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] bg-[#0d9488] text-white flex items-center justify-center">
+                  {unread}
+                </Badge>
+              )}
+            </Link>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={

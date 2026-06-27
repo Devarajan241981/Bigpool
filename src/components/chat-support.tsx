@@ -533,6 +533,13 @@ export default function ChatSupport() {
     }
   }, [msgs, typing]);
 
+  /* ── Listen for openChat event (triggered from Help page on mobile) ── */
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("openChat", handler);
+    return () => window.removeEventListener("openChat", handler);
+  }, []);
+
   /* ── Handle chip click ── */
   const handleChip = (chip: Chip) => {
     /* ── home ── */
@@ -724,9 +731,9 @@ export default function ChatSupport() {
 
   return (
     <>
-      {/* ── Chat window ── */}
+      {/* ── Chat window — full-screen on mobile, floating on desktop ── */}
       {open && (
-        <div className="fixed bottom-20 right-4 z-50 w-[360px] max-w-[calc(100vw-2rem)] flex flex-col shadow-2xl rounded-2xl overflow-hidden border border-gray-200 bg-white">
+        <div className="fixed inset-0 z-50 flex flex-col shadow-2xl overflow-hidden bg-white md:inset-auto md:bottom-20 md:right-4 md:w-[360px] md:max-w-[calc(100vw-2rem)] md:rounded-2xl md:border md:border-gray-200">
           {/* Header */}
           <div className={`${roleColor} px-4 py-3 flex items-center justify-between`}>
             <div className="flex items-center gap-2.5">
@@ -749,14 +756,14 @@ export default function ChatSupport() {
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
-              <button onClick={handleClose} className="text-white/70 hover:text-white transition-colors p-1">
-                <X className="w-4 h-4" />
+              <button onClick={handleClose} className="text-white/70 hover:text-white transition-colors p-2 -mr-1">
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50" style={{ maxHeight: 360 }}>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50 md:max-h-[360px]">
             {msgs.map((msg) => (
               <div key={msg.id} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"} gap-2`}>
                 {msg.from === "bot" && (
@@ -838,10 +845,10 @@ export default function ChatSupport() {
         </div>
       )}
 
-      {/* ── FAB button ── */}
+      {/* ── FAB button — desktop only ── */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`fixed bottom-4 right-4 z-50 ${roleColor} text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-200 flex items-center gap-2 ${open ? "rounded-full w-12 h-12 justify-center" : "rounded-full px-4 h-12"}`}
+        className={`fixed bottom-4 right-4 z-50 ${roleColor} text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-200 items-center gap-2 hidden md:flex ${open ? "rounded-full w-12 h-12 justify-center" : "rounded-full px-4 h-12"}`}
         aria-label="Open support chat"
       >
         {open ? (

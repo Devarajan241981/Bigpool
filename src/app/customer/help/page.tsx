@@ -338,10 +338,7 @@ export default function HelpPage() {
           <p className="text-white/80 text-sm mb-4">Our AI agent answers instantly. For complex issues, we connect you to a human admin (Mon–Sat, 9 AM – 8 PM).</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => {
-                const fab = document.querySelector<HTMLButtonElement>('[aria-label="Open support chat"]');
-                fab?.click();
-              }}
+              onClick={() => window.dispatchEvent(new CustomEvent("openChat"))}
               className="bg-white text-[#0d9488] font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-white/90 transition-colors flex items-center gap-2 justify-center"
             >
               <MessageCircle className="w-4 h-4" /> Ask Agent

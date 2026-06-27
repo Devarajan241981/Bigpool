@@ -75,7 +75,7 @@ export default function SplashScreen() {
             className="sp-left absolute inset-0 overflow-hidden"
             style={{ clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)" }}
           >
-            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block" }} />
+            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block", mixBlendMode:"screen" }} />
           </div>
 
           {/* Right half — the cart slides in */}
@@ -83,7 +83,7 @@ export default function SplashScreen() {
             className="sp-right absolute inset-0 overflow-hidden"
             style={{ clipPath: "polygon(50% 0, 100% 0, 100% 100%, 50% 100%)" }}
           >
-            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block" }} />
+            <img src="/logo.png" alt="" width={180} height={180} style={{ display:"block", mixBlendMode:"screen" }} />
           </div>
 
           {/* Collision flash ring */}
@@ -98,20 +98,6 @@ export default function SplashScreen() {
             }}
           />
         </div>
-
-        {/* ── Bigpool text fades in below ── */}
-        <p
-          className="sp-tagline mt-5 text-white font-semibold tracking-[0.18em] uppercase"
-          style={{ fontSize: 15, letterSpacing: "0.18em" }}
-        >
-          Bigpool
-        </p>
-        <p
-          className="sp-tagline text-[#0d9488] tracking-widest uppercase"
-          style={{ fontSize: 9, letterSpacing: "0.28em", animationDelay: "0.08s" }}
-        >
-          India&apos;s Favourite Marketplace
-        </p>
       </div>
     </>
   );
