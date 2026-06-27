@@ -30,7 +30,7 @@ export default function LoginPage() {
 
     const account = ACCOUNTS.find(a => a.email === form.email && a.password === form.password);
     if (account) {
-      login({ id: account.id, name: account.name, email: account.email, role: account.role, createdAt: "2024-01-01" });
+      login({ id: account.id, name: account.name, email: account.email, role: account.role, createdAt: "2024-01-01" }, "");
       toast.success(`Welcome back, ${account.name}!`);
       if (account.role === "admin") router.push("/superadmin/dashboard");
       else if (account.role === "seller") router.push("/vendor/dashboard");

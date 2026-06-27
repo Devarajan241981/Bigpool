@@ -31,7 +31,7 @@ export default function CustomerLoginPage() {
         toast.error(data.error ?? "Invalid email or password");
         return;
       }
-      login(data.user);
+      login(data.user, data.accessToken ?? "");
       toast.success(`Welcome back, ${data.user.name}!`);
       router.push(data.user.role === "seller" ? "/vendor/dashboard" : data.user.role === "admin" ? "/superadmin/dashboard" : "/");
     } catch {

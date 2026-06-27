@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     await new Promise((r) => setTimeout(r, 800));
 
     if (form.email === "admin@demo.com" && form.password === "demo123") {
-      login({ id: "admin1", name: "Super Admin", email: form.email, role: "admin", createdAt: "2024-01-01" });
+      login({ id: "admin1", name: "Super Admin", email: form.email, role: "admin", createdAt: "2024-01-01" }, "");
       toast.success("Welcome, Admin!");
       router.push("/superadmin/dashboard");
     } else {

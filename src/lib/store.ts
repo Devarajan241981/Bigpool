@@ -95,8 +95,10 @@ interface WishlistStore {
 interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
-  login: (user: User) => void;
+  accessToken: string | null;
+  login: (user: User, accessToken: string) => void;
   logout: () => void;
+  setAccessToken: (token: string) => void;
   updateUser: (patch: Partial<User>) => void;
 }
 
@@ -176,11 +178,23 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      login: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      accessToken: null,
+      login: (user, accessToken) => set({ user, isAuthenticated: true, accessToken }),
+      logout: () => {
+        if (typeof window !== "undefined") {
+          fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        }
+        set({ user: null, isAuthenticated: false, accessToken: null });
+      },
+      setAccessToken: (token) => set({ accessToken: token }),
       updateUser: (patch) => set((state) => ({ user: state.user ? { ...state.user, ...patch } : null })),
     }),
-    { name: "auth-store", storage: ssrStorage }
+    {
+      name: "auth-store",
+      storage: ssrStorage,
+      // accessToken is intentionally NOT persisted — lives in memory only
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+    }
   )
 );
 

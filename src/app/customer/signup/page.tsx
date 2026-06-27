@@ -31,10 +31,10 @@ export default function CustomerSignupPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Registration failed"); setLoading(false); return; }
-      login(data.user);
+      login(data.user, data.accessToken ?? "");
     } catch {
       // Fallback: still log in locally if API unreachable
-      login({ id: `c_${Date.now()}`, name: form.name, email: form.email, phone: form.phone, role: "customer", createdAt: new Date().toISOString() });
+      login({ id: `c_${Date.now()}`, name: form.name, email: form.email, phone: form.phone, role: "customer", createdAt: new Date().toISOString() }, "");
     }
     toast.success("Welcome to Bigpool! Happy Shopping 🎉");
     router.push("/");

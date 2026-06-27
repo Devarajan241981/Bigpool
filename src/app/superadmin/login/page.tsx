@@ -29,7 +29,7 @@ export default function SuperAdminLoginPage() {
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Invalid credentials"); return; }
       if (data.user.role !== "admin") { toast.error("This portal is for administrators only."); return; }
-      login(data.user);
+      login(data.user, data.accessToken ?? "");
       toast.success("Welcome, Super Admin!");
       router.push("/superadmin/dashboard");
     } catch {

@@ -29,7 +29,7 @@ export default function VendorLoginPage() {
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Invalid credentials"); return; }
       if (data.user.role !== "seller") { toast.error("This portal is for vendors only."); return; }
-      login(data.user);
+      login(data.user, data.accessToken ?? "");
       toast.success(`Welcome back, ${data.user.name}!`);
       router.push("/vendor/dashboard");
     } catch {

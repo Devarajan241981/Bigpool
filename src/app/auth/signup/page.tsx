@@ -37,7 +37,7 @@ export default function SignupPage() {
       phone: form.phone,
       role: "customer",
       createdAt: new Date().toISOString(),
-    });
+    }, "");
     toast.success("Account created successfully! Welcome to Bigpool!");
     router.push("/");
     setLoading(false);

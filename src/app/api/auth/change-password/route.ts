@@ -90,6 +90,9 @@ export async function POST(request: NextRequest) {
     }
 
     await db.from("users").update({ password: newPassword }).eq("email", normalizedEmail);
+    // Revoke all refresh tokens for this user → force logout on all devices
+    await db.from("refresh_tokens").delete().eq("email", normalizedEmail);
+
     sendPasswordChangedEmail(profile.name, normalizedEmail);
     return Response.json({ success: true });
   }

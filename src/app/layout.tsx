@@ -12,6 +12,7 @@ import PushPermission from "@/components/push-permission";
 import SplashScreen from "@/components/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/error-boundary";
+import AuthProvider from "@/components/auth-provider";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PwaRegister />
         <PushPermission />
         <StoreHydrator />
+        <AuthProvider>
         <Navbar />
         <main className="flex-1 pb-16 md:pb-0">
           <ErrorBoundary>{children}</ErrorBoundary>
@@ -59,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <InstallPrompt />
         <ChatSupport />
         <Toaster richColors position="bottom-right" />
+        </AuthProvider>
       </body>
     </html>
   );
