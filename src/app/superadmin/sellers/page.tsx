@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Store, CheckCircle, XCircle, Clock, Search,
-  Mail, FileText, Shield, User, Banknote, TrendingUp, IndianRupee, Package,
+  Mail, FileText, Shield, User, Banknote, TrendingUp, IndianRupee, Package, RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function SuperAdminSellersPage() {
   const [apiApps, setApiApps] = useState<SellerApplication[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [selectedApp, setSelectedApp] = useState<SellerApplication | null>(null);
   const [appBankDetails, setAppBankDetails] = useState<Record<string, string> | null>(null);
@@ -39,17 +40,25 @@ export default function SuperAdminSellersPage() {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
 
-  useEffect(() => {
-    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
-      const h = getAuthHeaders();
+  const fetchData = async () => {
+    const h = getAuthHeaders();
+    setRefreshing(true);
+    await Promise.all([
       fetch("/api/sellers", { headers: h })
         .then((r) => r.ok ? r.json() : [])
         .then(setSellers)
-        .catch(() => {});
+        .catch(() => {}),
       fetch("/api/vendor-applications", { headers: h })
         .then((r) => r.ok ? r.json() : [])
         .then(setApiApps)
-        .catch(() => {});
+        .catch(() => {}),
+    ]);
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
+      fetchData();
     }
   }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -66,13 +75,22 @@ export default function SuperAdminSellersPage() {
     toast.success(`Seller ${status === "approved" ? "approved" : "rejected"} successfully.`);
   };
 
-  const updateApplicationStatus = (id: string, status: "approved" | "rejected") => {
-    // Update server
-    fetch("/api/vendor-applications", {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ id, status }),
-    }).catch(() => {});
+  const updateApplicationStatus = async (id: string, status: "approved" | "rejected") => {
+    try {
+      const res = await fetch("/api/vendor-applications", {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(`Failed to ${status} application: ${err.error ?? res.status}. Try refreshing and logging in again.`);
+        return;
+      }
+    } catch {
+      toast.error("Network error — application status not saved. Check your connection.");
+      return;
+    }
     // Update local Zustand store too (for same-browser customer status page)
     updateAppStatus(id, status);
     setApiApps((prev) => prev.map((a) => a.id === id ? { ...a, status } : a));
@@ -110,6 +128,14 @@ export default function SuperAdminSellersPage() {
         {apiApps.filter(a => a.status === "pending").length > 0 && (
           <Badge className="bg-blue-100 text-blue-700 text-xs">{apiApps.filter(a => a.status === "pending").length} new application(s)</Badge>
         )}
+        <button
+          onClick={fetchData}
+          disabled={refreshing}
+          className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </button>
       </div>
 
       {/* Filter tabs */}

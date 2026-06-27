@@ -1,24 +1,12 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
 import { upgradeToSeller } from "@/lib/server-store";
-import { requireAdmin } from "@/lib/api-auth";
+import { requireAdmin, requireAuth } from "@/lib/api-auth";
 
 const inMemoryApps: Record<string, unknown>[] = [];
 
-export async function GET(req: NextRequest) {
-  const auth = requireAdmin(req);
-  if (auth instanceof Response) return auth;
-  const db = getDb();
-  if (!db) return Response.json(inMemoryApps);
-
-  const { data, error } = await db
-    .from("vendor_applications")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) return Response.json({ error: error.message }, { status: 500 });
-
-  // Normalize snake_case → camelCase for the frontend
-  const normalized = (data ?? []).map((r: Record<string, unknown>) => ({
+function normalizeApp(r: Record<string, unknown>) {
+  return {
     id: r.id,
     name: r.name,
     email: r.email,
@@ -29,8 +17,36 @@ export async function GET(req: NextRequest) {
     status: r.status,
     submittedAt: r.created_at,
     fromCustomer: r.from_customer ?? false,
-  }));
-  return Response.json(normalized);
+  };
+}
+
+export async function GET(req: NextRequest) {
+  const db = getDb();
+
+  // Admin → return all applications
+  const adminAuth = requireAdmin(req);
+  if (!(adminAuth instanceof Response)) {
+    if (!db) return Response.json(inMemoryApps);
+    const { data, error } = await db
+      .from("vendor_applications")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    return Response.json((data ?? []).map(normalizeApp));
+  }
+
+  // Regular authenticated user → return only their own applications
+  const userAuth = requireAuth(req);
+  if (userAuth instanceof Response) return userAuth;
+  const email = userAuth.email;
+  if (!db) return Response.json(inMemoryApps.filter((a) => a.email === email));
+  const { data, error } = await db
+    .from("vendor_applications")
+    .select("*")
+    .eq("email", email)
+    .order("created_at", { ascending: false });
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+  return Response.json((data ?? []).map(normalizeApp));
 }
 
 export async function POST(request: NextRequest) {
