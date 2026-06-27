@@ -8,6 +8,7 @@ import StoreHydrator from "@/components/store-hydrator";
 import MobileBottomNav from "@/components/mobile-bottom-nav";
 import InstallPrompt from "@/components/install-prompt";
 import PwaRegister from "@/components/pwa-register";
+import SplashScreen from "@/components/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/error-boundary";
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" href="/favicon.png" />
       </head>
       <body className={`${geist.className} bg-gray-100 min-h-screen flex flex-col`}>
+        <SplashScreen />
         <PwaRegister />
         <StoreHydrator />
         <Navbar />
