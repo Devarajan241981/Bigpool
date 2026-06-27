@@ -32,12 +32,12 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center gap-4">
-        <div className="text-7xl">🛒</div>
-        <h2 className="text-2xl font-bold text-gray-800">Your cart is empty</h2>
-        <p className="text-gray-500">Add items to your cart to continue shopping</p>
+      <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center gap-4 pb-24 md:pb-16">
+        <div className="text-6xl md:text-7xl">🛒</div>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-800">Your cart is empty</h2>
+        <p className="text-gray-500 text-center">Add items to your cart to continue shopping</p>
         <Link href="/customer/products">
-          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold px-8">
+          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold px-8 h-11">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Continue Shopping
           </Button>
@@ -47,19 +47,19 @@ export default function CartPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Shopping Cart</h1>
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Shopping Cart</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Cart items */}
         <div className="lg:col-span-2 space-y-3">
           {items.map(({ product, quantity }) => (
-            <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-4 flex gap-4">
-              <Link href={`/customer/products/${product.id}`}>
+            <div key={product.id} className="bg-white rounded-xl border border-gray-200 p-3 md:p-4 flex gap-3 md:gap-4">
+              <Link href={`/customer/products/${product.id}`} className="flex-shrink-0">
                 <img
                   src={product.images[0]}
                   alt={product.name}
-                  className="w-24 h-24 object-cover rounded-lg flex-shrink-0 hover:opacity-90 transition-opacity"
+                  className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-lg hover:opacity-90 transition-opacity"
                 />
               </Link>
               <div className="flex-1 min-w-0">
@@ -70,26 +70,26 @@ export default function CartPage() {
                 {product.stock <= 10 && (
                   <p className="text-xs text-red-500 mt-0.5">Only {product.stock} left</p>
                 )}
-                <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center justify-between mt-2 md:mt-3 flex-wrap gap-2">
                   <div>
-                    <span className="text-lg font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
+                    <span className="text-base md:text-lg font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
                     {product.originalPrice > product.price && (
                       <span className="text-xs text-gray-400 line-through ml-2">₹{product.originalPrice.toLocaleString()}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center border rounded-lg overflow-hidden">
-                      <button onClick={() => updateQuantity(product.id, quantity - 1)} className="px-2 py-1 hover:bg-gray-100">
+                      <button onClick={() => updateQuantity(product.id, quantity - 1)} className="px-2 py-1.5 hover:bg-gray-100 min-w-[32px] flex items-center justify-center">
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="px-3 py-1 text-sm font-semibold border-x">{quantity}</span>
-                      <button onClick={() => updateQuantity(product.id, quantity + 1)} className="px-2 py-1 hover:bg-gray-100" disabled={quantity >= product.stock}>
+                      <span className="px-3 py-1.5 text-sm font-semibold border-x min-w-[36px] text-center">{quantity}</span>
+                      <button onClick={() => updateQuantity(product.id, quantity + 1)} className="px-2 py-1.5 hover:bg-gray-100 min-w-[32px] flex items-center justify-center" disabled={quantity >= product.stock}>
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
                     <button
                       onClick={() => { removeItem(product.id); toast.success("Removed from cart"); }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-2 text-gray-400 hover:text-red-500 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

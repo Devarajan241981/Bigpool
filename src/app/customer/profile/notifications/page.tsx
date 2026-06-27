@@ -19,15 +19,15 @@ export default function NotificationsPage() {
   const unread = unreadCount();
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-2xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div className="flex items-center gap-2">
           <Bell className="w-5 h-5 text-[#0d9488]" />
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Notifications</h1>
           {unread > 0 && <Badge className="bg-red-500 text-white">{unread} new</Badge>}
         </div>
         {unread > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllRead} className="gap-2 text-xs">
+          <Button variant="outline" size="sm" onClick={markAllRead} className="gap-2 text-xs h-9">
             <Check className="w-3.5 h-3.5" /> Mark all read
           </Button>
         )}

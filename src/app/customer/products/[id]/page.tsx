@@ -220,9 +220,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="max-w-7xl mx-auto px-4 py-4 pb-20 md:pb-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1 text-xs text-gray-500 mb-4 flex-wrap">
+      <nav className="flex items-center gap-1 text-xs text-gray-500 mb-3 md:mb-4 flex-wrap">
         <Link href="/" className="hover:text-[#0d9488]">Home</Link>
         <ChevronRight className="w-3 h-3" />
         <Link href="/customer/products" className="hover:text-[#0d9488]">Products</Link>
@@ -233,16 +233,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </nav>
 
       {product.isDemo && (
-        <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <span className="text-xl">🏷️</span>
-          <div>
+        <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <span className="text-xl flex-shrink-0">🏷️</span>
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-amber-800">Sample Listing</p>
-            <p className="text-xs text-amber-700">This product is a showcase example. Real sellers are joining Bigpool soon. You can save it to your wishlist and we'll notify you when it's available.</p>
+            <p className="text-xs text-amber-700">This product is a showcase example. Real sellers are joining Bigpool soon. You can save it to your wishlist and we&apos;ll notify you when it&apos;s available.</p>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
         {/* Images */}
         <div className="md:col-span-1">
           <div className="bg-white rounded-xl border border-gray-200 p-4 sticky top-20">

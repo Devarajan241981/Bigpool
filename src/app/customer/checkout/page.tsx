@@ -181,10 +181,10 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center pb-20 md:pb-16">
         <p className="text-5xl mb-4">🛒</p>
         <h2 className="text-xl font-semibold mb-4">Nothing to checkout</h2>
-        <Link href="/customer/products"><Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white">Shop Now</Button></Link>
+        <Link href="/customer/products"><Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white h-11 px-8">Shop Now</Button></Link>
       </div>
     );
   }
@@ -192,33 +192,33 @@ export default function CheckoutPage() {
   const steps = ["Delivery Address", "Payment", "Review"];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Checkout</h1>
 
       {/* Step indicator */}
-      <div className="flex items-center mb-8">
+      <div className="flex items-center mb-6 md:mb-8">
         {steps.map((s, i) => (
           <div key={i} className="flex items-center">
             <button
               onClick={() => i < step && setStep(i)}
-              className={`flex items-center gap-2 ${i <= step ? "text-[#0d9488]" : "text-gray-400"}`}
+              className={`flex items-center gap-1.5 ${i <= step ? "text-[#0d9488]" : "text-gray-400"}`}
             >
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold border-2 flex-shrink-0 ${
                 i < step ? "bg-[#0d9488] border-[#0d9488] text-white" :
                 i === step ? "border-[#0d9488] text-[#0d9488]" : "border-gray-300 text-gray-400"
               }`}>
                 {i < step ? "✓" : i + 1}
               </div>
-              <span className="text-sm hidden sm:block">{s}</span>
+              <span className="text-xs sm:text-sm hidden xs:block">{s}</span>
             </button>
             {i < steps.length - 1 && (
-              <div className={`h-0.5 w-16 sm:w-24 mx-2 ${i < step ? "bg-[#0d9488]" : "bg-gray-200"}`} />
+              <div className={`h-0.5 w-8 sm:w-16 md:w-24 mx-1.5 md:mx-2 ${i < step ? "bg-[#0d9488]" : "bg-gray-200"}`} />
             )}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <div className="lg:col-span-2">
           {/* Step 0: Address */}
           {step === 0 && (
@@ -275,7 +275,7 @@ export default function CheckoutPage() {
                   <div><Label>Pincode</Label><Input className="mt-1.5" placeholder="560001" maxLength={6} value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })} /></div>
                 </div>
               )}
-              <Button className="mt-6 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto px-8" onClick={() => {
+              <Button className="mt-6 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto px-8 h-11" onClick={() => {
                 const a = activeAddress;
                 if (!a.name || !a.street || !a.city || !a.pincode) { toast.error("Please fill all required fields"); return; }
                 setStep(1);
@@ -358,8 +358,8 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex gap-3 mt-6">
-                  <Button variant="outline" onClick={() => setStep(0)}>Back</Button>
-                  <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold px-8" onClick={() => setStep(2)}>
+                  <Button variant="outline" onClick={() => setStep(0)} className="h-11 px-5">Back</Button>
+                  <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold px-6 md:px-8 h-11 flex-1 sm:flex-none" onClick={() => setStep(2)}>
                     Review Order <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
@@ -384,7 +384,7 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <Separator className="my-4" />
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                 <div>
                   <p className="text-gray-500 text-xs font-medium uppercase mb-1">Delivery to:</p>
                   <p className="font-medium">{activeAddress.name}</p>
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
                 </div>
               )}
               <div className="flex gap-3 mt-6">
-                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)} className="h-11 px-5">Back</Button>
                 <Button className="flex-1 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold h-11" onClick={handlePlaceOrder} disabled={placing}>
                   {placing ? "Placing Order..." : `Place Order — ₹${finalTotal.toLocaleString()}`}
                 </Button>
