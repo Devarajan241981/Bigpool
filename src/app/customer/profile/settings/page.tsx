@@ -17,13 +17,32 @@ export default function SettingsPage() {
   const router = useRouter();
   const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
+  const [pwLoading, setPwLoading] = useState(false);
   const [notifications, setNotifications] = useState({
     orders: true, promotions: true, refunds: true, newsletter: false,
   });
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Password changed successfully!");
+    if (pwForm.newPw !== pwForm.confirm) { toast.error("Passwords do not match"); return; }
+    if (pwForm.newPw.length < 8) { toast.error("New password must be at least 8 characters"); return; }
+    setPwLoading(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user?.email, currentPassword: pwForm.current, newPassword: pwForm.newPw }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Failed to change password"); return; }
+      toast.success("Password changed! A confirmation email has been sent.");
+      setPwForm({ current: "", newPw: "", confirm: "" });
+    } catch {
+      toast.error("Something went wrong. Try again.");
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   if (!hasHydrated) return null;
@@ -51,7 +70,7 @@ export default function SettingsPage() {
           <div>
             <Label>Current Password</Label>
             <div className="relative mt-1.5">
-              <Input type={showOld ? "text" : "password"} placeholder="••••••••" className="pr-9" />
+              <Input type={showOld ? "text" : "password"} placeholder="••••••••" className="pr-9" value={pwForm.current} onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })} required />
               <button type="button" onClick={() => setShowOld(!showOld)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 {showOld ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -60,7 +79,7 @@ export default function SettingsPage() {
           <div>
             <Label>New Password</Label>
             <div className="relative mt-1.5">
-              <Input type={showNew ? "text" : "password"} placeholder="Min 8 characters" className="pr-9" />
+              <Input type={showNew ? "text" : "password"} placeholder="Min 8 characters" className="pr-9" value={pwForm.newPw} onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })} required />
               <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -68,10 +87,10 @@ export default function SettingsPage() {
           </div>
           <div>
             <Label>Confirm New Password</Label>
-            <Input type="password" placeholder="Repeat new password" />
+            <Input type="password" placeholder="Repeat new password" value={pwForm.confirm} onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })} required />
           </div>
-          <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11">
-            Update Password
+          <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11" disabled={pwLoading}>
+            {pwLoading ? "Updating..." : "Update Password"}
           </Button>
         </form>
       </div>
