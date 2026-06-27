@@ -326,47 +326,65 @@ export default function ProfilePage() {
 
           {/* My Applications */}
           {myApps.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="px-4 py-3 border-b flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Store className="w-4 h-4 text-[#0d9488]" />
-                  <h3 className="font-semibold text-sm text-gray-900">My Vendor Applications</h3>
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div className="flex items-center gap-2.5">
+                  <div className="bg-[#0d9488] rounded-lg p-1.5">
+                    <Store className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900">My Vendor Applications</h3>
+                    <p className="text-[11px] text-gray-500">{myApps.length} application{myApps.length > 1 ? "s" : ""}</p>
+                  </div>
                 </div>
-                <Link href="/vendor/application/signup" className="text-xs text-[#0d9488] font-medium hover:underline">
+                <Link href="/vendor/application/signup" className="text-xs text-[#0d9488] font-semibold bg-teal-50 border border-teal-200 rounded-lg px-3 py-1.5 hover:bg-teal-100 transition-colors">
                   + New
                 </Link>
               </div>
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-gray-100">
                 {myApps.map((app) => (
-                  <div key={app.id as string} className="flex items-center gap-3 px-4 py-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      app.status === "approved" ? "bg-green-100" : app.status === "rejected" ? "bg-red-100" : "bg-amber-100"
-                    }`}>
-                      {app.status === "approved" ? <CheckCircle className="w-4 h-4 text-green-600" /> :
-                       app.status === "rejected" ? <XCircle className="w-4 h-4 text-red-600" /> :
-                       <Clock className="w-4 h-4 text-amber-600 animate-pulse" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{app.businessName as string}</p>
-                      <p className="text-xs text-gray-400">{app.category as string} · Applied {app.submittedAt as string}</p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge className={`text-[10px] capitalize ${
-                        app.status === "approved" ? "bg-green-100 text-green-700" :
-                        app.status === "rejected" ? "bg-red-100 text-red-700" :
-                        "bg-amber-100 text-amber-700"
+                  <div key={app.id as string} className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        app.status === "approved" ? "bg-green-100" : app.status === "rejected" ? "bg-red-100" : "bg-amber-100"
                       }`}>
-                        {app.status === "pending" ? "Under Review" : app.status as string}
-                      </Badge>
-                      {app.status === "pending" && (
+                        {app.status === "approved" ? <CheckCircle className="w-6 h-6 text-green-600" /> :
+                         app.status === "rejected" ? <XCircle className="w-6 h-6 text-red-600" /> :
+                         <Clock className="w-6 h-6 text-amber-600 animate-pulse" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <p className="text-base font-bold text-gray-900">{app.businessName as string}</p>
+                          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                            app.status === "approved" ? "bg-green-100 text-green-700" :
+                            app.status === "rejected" ? "bg-red-100 text-red-700" :
+                            "bg-amber-100 text-amber-700"
+                          }`}>
+                            {app.status === "pending" ? "⏳ Under Review" : app.status === "approved" ? "✅ Approved" : "❌ Rejected"}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">{app.category as string}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Applied on {app.submittedAt as string}</p>
+                      </div>
+                    </div>
+                    {app.status === "pending" && (
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-xs text-gray-400">Admin will review within 2–3 business days</p>
                         <button
                           onClick={() => setWithdrawConfirm(app.id as string)}
-                          className="text-[10px] text-red-500 hover:text-red-700 font-medium border border-red-200 hover:border-red-400 rounded px-2 py-0.5 transition-colors"
+                          className="text-xs text-red-500 hover:text-red-700 font-semibold border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors"
                         >
                           Withdraw
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                    {app.status === "approved" && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <Link href="/vendor/dashboard" className="text-xs text-[#0d9488] font-semibold hover:underline">
+                          Go to Vendor Dashboard →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -422,13 +440,20 @@ export default function ProfilePage() {
           )}
 
           {/* Download App card */}
-          <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] rounded-xl p-5 text-white flex items-center gap-4">
-            <div className="bg-[#0d9488] rounded-xl p-3 flex-shrink-0">
-              <Smartphone className="w-6 h-6" />
+          <div className="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0d9488] rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-white/10 backdrop-blur rounded-xl p-3 flex-shrink-0">
+                <Smartphone className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-base leading-tight">Install the Bigpool App</p>
+                <p className="text-sm text-white/70 mt-0.5">Your marketplace, always in your pocket</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm">Install the Bigpool App</p>
-              <p className="text-xs text-gray-300 mt-0.5">Faster access · App-only deals · Works offline</p>
+            <div className="flex flex-wrap gap-2 text-xs text-white/60 mb-4">
+              <span className="bg-white/10 rounded-full px-3 py-1">⚡ Faster checkout</span>
+              <span className="bg-white/10 rounded-full px-3 py-1">🏷️ App-only deals</span>
+              <span className="bg-white/10 rounded-full px-3 py-1">📶 Works offline</span>
             </div>
             <button
               onClick={() => {
@@ -438,9 +463,9 @@ export default function ProfilePage() {
                   window.dispatchEvent(new CustomEvent("triggerInstall"));
                 }
               }}
-              className="flex-shrink-0 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+              className="w-full bg-white text-[#0f172a] text-sm font-bold py-3 rounded-xl hover:bg-white/90 transition-colors"
             >
-              Install
+              Install Now — It's Free
             </button>
           </div>
         </div>
