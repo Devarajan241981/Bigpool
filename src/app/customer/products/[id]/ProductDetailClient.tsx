@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Star, Heart, ShoppingCart, Zap, Shield, Truck, RotateCcw,
   ChevronRight, Minus, Plus, Share2, Store, CheckCircle, Camera, X, Loader2,
+  Copy, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +77,26 @@ export default function ProductDetailClient({ id, serverProduct }: Props) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
+  const [shareOpen, setShareOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bigpool.in";
+  const productUrl = `${BASE}/customer/products/${id}`;
+
+  const handleShare = async (method: "whatsapp" | "copy" | "native") => {
+    const text = `🛍️ Check out ${product?.name} at ₹${product?.price.toLocaleString()} on Bigpool!\n${productUrl}`;
+    if (method === "whatsapp") {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    } else if (method === "copy") {
+      await navigator.clipboard.writeText(productUrl);
+      setLinkCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setLinkCopied(false), 2000);
+    } else if (method === "native" && navigator.share) {
+      await navigator.share({ title: product?.name, text: `Check this out on Bigpool!`, url: productUrl });
+    }
+    setShareOpen(false);
+  };
 
   useEffect(() => {
     fetch(`/api/reviews?productId=${id}`)
@@ -300,9 +321,36 @@ export default function ProductDetailClient({ id, serverProduct }: Props) {
                   No ratings yet — be the first
                 </span>
               )}
-              <button className="text-gray-400 hover:text-gray-600 ml-auto">
-                <Share2 className="w-4 h-4" />
-              </button>
+              <div className="relative ml-auto">
+                <button
+                  onClick={() => setShareOpen((v) => !v)}
+                  className="text-gray-400 hover:text-[#0d9488] transition-colors"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+                {shareOpen && (
+                  <div className="absolute right-0 top-6 z-20 bg-white border border-gray-200 rounded-xl shadow-lg p-2 w-48 flex flex-col gap-1">
+                    <button
+                      onClick={() => handleShare("whatsapp")}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-green-50 text-sm text-gray-700 text-left"
+                    >
+                      <MessageCircle className="w-4 h-4 text-[#25D366]" /> Share on WhatsApp
+                    </button>
+                    <button
+                      onClick={() => handleShare("copy")}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 text-left"
+                    >
+                      <Copy className="w-4 h-4 text-gray-400" /> {linkCopied ? "Copied!" : "Copy link"}
+                    </button>
+                    <button
+                      onClick={() => handleShare("native")}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-700 text-left"
+                    >
+                      <Share2 className="w-4 h-4 text-gray-400" /> More options
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

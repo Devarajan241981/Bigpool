@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   User, Package, Heart, RotateCcw, Bell, Settings,
   LogOut, ChevronRight, Edit3, MapPin, Phone, Mail, Camera, Smartphone, Wallet,
-  HelpCircle, Store, Clock, CheckCircle, XCircle,
+  HelpCircle, Store, Clock, CheckCircle, XCircle, Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ const navItems = [
   { href: "/customer/profile", label: "My Profile", icon: User },
   { href: "/customer/profile/orders", label: "My Orders", icon: Package },
   { href: "/customer/profile/wishlist", label: "Wishlist", icon: Heart },
+  { href: "/customer/profile/refer", label: "Refer & Earn ₹100", icon: Gift },
   { href: "/customer/profile/refunds", label: "Refunds", icon: RotateCcw },
   { href: "/customer/profile/notifications", label: "Notifications", icon: Bell },
   { href: "/customer/profile/settings", label: "Settings", icon: Settings },
@@ -133,6 +134,7 @@ export default function ProfilePage() {
         {[
           { href: "/customer/profile/orders", icon: Package, label: "Orders", color: "text-blue-600 bg-blue-50" },
           { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", color: "text-red-600 bg-red-50" },
+          { href: "/customer/profile/refer", icon: Gift, label: "Refer ₹100", color: "text-green-600 bg-green-50" },
           { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
           { href: "/customer/profile/notifications", icon: Bell, label: "Alerts", color: "text-teal-600 bg-teal-50" },
           { href: "/customer/profile/settings", icon: Settings, label: "Settings", color: "text-gray-600 bg-gray-100" },

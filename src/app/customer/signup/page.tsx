@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, User, Phone } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Lock, Mail, User, Phone, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useWalletStore } from "@/lib/store";
 import { toast } from "sonner";
 
-export default function CustomerSignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refCode = searchParams.get("ref") ?? "";
+
   const { login } = useAuthStore();
+  const { credit } = useWalletStore();
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", confirm: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,14 +35,42 @@ export default function CustomerSignupPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Registration failed"); setLoading(false); return; }
+
       login(data.user, data.accessToken ?? "");
+
+      // Apply referral credit if came via a referral link
+      if (refCode && refCode !== data.user.id) {
+        try {
+          const refRes = await fetch("/api/referral/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              referrerId: refCode,
+              refereeId: data.user.id,
+              refereeEmail: data.user.email,
+            }),
+          });
+          const refData = await refRes.json();
+          if (refData.ok && !refData.selfReferral) {
+            credit(100, "Referral welcome bonus 🎉", undefined, "cashback");
+            toast.success("Welcome to Bigpool! ₹100 added to your wallet 🎉");
+            router.push("/customer/profile/wallet");
+            return;
+          }
+        } catch {
+          // Non-blocking
+        }
+      }
+
+      toast.success("Welcome to Bigpool! Happy Shopping 🎉");
+      router.push("/");
     } catch {
-      // Fallback: still log in locally if API unreachable
       login({ id: `c_${Date.now()}`, name: form.name, email: form.email, phone: form.phone, role: "customer", createdAt: new Date().toISOString() }, "");
+      toast.success("Welcome to Bigpool! Happy Shopping 🎉");
+      router.push("/");
+    } finally {
+      setLoading(false);
     }
-    toast.success("Welcome to Bigpool! Happy Shopping 🎉");
-    router.push("/");
-    setLoading(false);
   };
 
   return (
@@ -50,6 +82,16 @@ export default function CustomerSignupPage() {
           </Link>
           <p className="text-gray-500 text-sm mt-1">Customer Registration</p>
         </div>
+
+        {refCode && (
+          <div className="mb-4 flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <Gift className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-green-800">You have a referral bonus!</p>
+              <p className="text-xs text-green-700">Sign up now and get <strong>₹100 free</strong> in your Bigpool wallet.</p>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Create Account</h1>
@@ -78,10 +120,10 @@ export default function CustomerSignupPage() {
             </div>
             <div className="flex items-start gap-2">
               <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5" />
-              <label htmlFor="terms" className="text-xs text-gray-600">I agree to Bigpool's <Link href="#" className="text-[#0d9488] hover:underline">Terms of Service</Link> and <Link href="#" className="text-[#0d9488] hover:underline">Privacy Policy</Link></label>
+              <label htmlFor="terms" className="text-xs text-gray-600">I agree to Bigpool's <Link href="/terms" className="text-[#0d9488] hover:underline">Terms of Service</Link> and Privacy Policy</label>
             </div>
             <Button type="submit" className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold h-11" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Creating account..." : refCode ? "Create Account & Claim ₹100 🎉" : "Create Account"}
             </Button>
           </form>
 
@@ -98,5 +140,13 @@ export default function CustomerSignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerSignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }
