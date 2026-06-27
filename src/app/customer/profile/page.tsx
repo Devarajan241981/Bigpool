@@ -86,7 +86,6 @@ export default function ProfilePage() {
           <div className="min-w-0">
             <p className="font-bold text-lg leading-tight">{user?.name}</p>
             <p className="text-xs text-gray-300 truncate">{user?.email}</p>
-            <Badge className="mt-1.5 bg-[#0d9488] text-white text-xs capitalize">{user?.role}</Badge>
           </div>
         </div>
       </div>
@@ -132,7 +131,6 @@ export default function ProfilePage() {
               </div>
               <p className="font-semibold mt-3">{user?.name}</p>
               <p className="text-xs text-gray-300 mt-0.5">{user?.email}</p>
-              <Badge className="mt-2 bg-[#0d9488] text-white text-xs capitalize">{user?.role}</Badge>
             </div>
 
             <nav className="py-2">
