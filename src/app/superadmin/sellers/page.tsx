@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSellerApplicationStore, useAuthStore, useHasHydrated } from "@/lib/store";
+// useSellerApplicationStore kept for updateStatus (syncs same-browser customer status view)
 import type { Seller } from "@/lib/types";
 import type { SellerApplication } from "@/lib/store";
 import { toast } from "sonner";
@@ -102,8 +103,8 @@ export default function SuperAdminSellersPage() {
       <div className="flex items-center gap-2 mb-6">
         <Store className="w-5 h-5 text-[#0d9488]" />
         <h1 className="text-2xl font-bold text-gray-900">Seller Management</h1>
-        {applications.length > 0 && (
-          <Badge className="bg-blue-100 text-blue-700 text-xs">{applications.length} new application(s)</Badge>
+        {apiApps.filter(a => a.status === "pending").length > 0 && (
+          <Badge className="bg-blue-100 text-blue-700 text-xs">{apiApps.filter(a => a.status === "pending").length} new application(s)</Badge>
         )}
       </div>
 
