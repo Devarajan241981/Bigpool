@@ -2,8 +2,6 @@ import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
 import { upgradeToSeller } from "@/lib/server-store";
 
-// In-memory fallback when Supabase is not configured.
-// Data persists as long as the server process is alive.
 const inMemoryApps: Record<string, unknown>[] = [];
 
 export async function GET() {
@@ -11,11 +9,25 @@ export async function GET() {
   if (!db) return Response.json(inMemoryApps);
 
   const { data, error } = await db
-    .from("seller_applications")
+    .from("vendor_applications")
     .select("*")
-    .order("submitted_at", { ascending: false });
+    .order("created_at", { ascending: false });
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data ?? []);
+
+  // Normalize snake_case → camelCase for the frontend
+  const normalized = (data ?? []).map((r: Record<string, unknown>) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    businessName: r.business_name,
+    category: r.category,
+    description: r.description,
+    status: r.status,
+    submittedAt: r.created_at,
+    fromCustomer: r.from_customer ?? false,
+  }));
+  return Response.json(normalized);
 }
 
 export async function POST(request: NextRequest) {
@@ -28,19 +40,14 @@ export async function POST(request: NextRequest) {
     email: body.email,
     phone: body.phone,
     businessName: body.businessName,
-    gstin: body.gstin ?? "",
     category: body.category,
-    address: body.address,
     description: body.description,
-    bankAccount: body.bankAccount ?? "",
-    ifsc: body.ifsc ?? "",
     status: "pending",
     submittedAt: new Date().toISOString(),
     fromCustomer: body.fromCustomer ?? false,
   };
 
   if (!db) {
-    // Avoid duplicate submissions (same email + businessName)
     const exists = inMemoryApps.find(
       (a) => a.email === app.email && a.businessName === app.businessName
     );
@@ -49,19 +56,37 @@ export async function POST(request: NextRequest) {
   }
 
   const { data, error } = await db
-    .from("seller_applications")
+    .from("vendor_applications")
     .insert({
-      name: app.name, email: app.email, phone: app.phone,
-      business_name: app.businessName, gstin: app.gstin,
-      category: app.category, address: app.address,
-      description: app.description, bank_account: app.bankAccount,
-      ifsc: app.ifsc, status: "pending", from_customer: app.fromCustomer,
+      id: app.id,
+      name: app.name,
+      email: app.email,
+      phone: app.phone,
+      business_name: app.businessName,
+      category: app.category,
+      description: app.description,
+      status: "pending",
     })
     .select()
     .single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data, { status: 201 });
+  return Response.json({ ...app, ...data }, { status: 201 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const { id } = await request.json();
+  const db = getDb();
+
+  if (!db) {
+    const idx = inMemoryApps.findIndex((a) => a.id === id);
+    if (idx !== -1) inMemoryApps.splice(idx, 1);
+    return Response.json({ success: true });
+  }
+
+  const { error } = await db.from("vendor_applications").delete().eq("id", id);
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+  return Response.json({ success: true });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -72,7 +97,6 @@ export async function PATCH(request: NextRequest) {
     const app = inMemoryApps.find((a) => a.id === id);
     if (app) {
       (app as Record<string, unknown>).status = status;
-      // If approved, upgrade the customer's role to seller so they can log in as vendor
       if (status === "approved") {
         upgradeToSeller(app.email as string, app.businessName as string);
       }
@@ -81,9 +105,26 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { error } = await db
-    .from("seller_applications")
+    .from("vendor_applications")
     .update({ status })
     .eq("id", id);
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // If approved, upgrade the user's role in the users table
+  if (status === "approved") {
+    const { data: appData } = await db
+      .from("vendor_applications")
+      .select("email, business_name")
+      .eq("id", id)
+      .single();
+
+    if (appData) {
+      await db
+        .from("users")
+        .update({ role: "seller", business_name: appData.business_name })
+        .eq("email", appData.email);
+    }
+  }
+
   return Response.json({ id, status });
 }

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore, useOrderStore, useSellerApplicationStore } from "@/lib/store";
+import { useAuthStore, useOrderStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -26,14 +26,49 @@ const navItems = [
 export default function ProfilePage() {
   const { user, isAuthenticated, logout, updateUser } = useAuthStore();
   const { orders, fetchOrders } = useOrderStore();
-  const { applications } = useSellerApplicationStore();
-  const myApps = applications.filter((a) => a.email === (user?.email ?? ""));
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [myApps, setMyApps] = useState<Record<string, unknown>[]>([]);
+  const [withdrawConfirm, setWithdrawConfirm] = useState<string | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user?.id) fetchOrders({ customerId: user.id });
   }, [isAuthenticated, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!user?.email) return;
+    fetch("/api/vendor-applications")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setMyApps(data.filter((a: Record<string, unknown>) => a.email === user.email));
+        }
+      })
+      .catch(() => {});
+  }, [user?.email]);
+
+  const handleWithdraw = async (id: string) => {
+    setWithdrawing(true);
+    try {
+      const res = await fetch("/api/vendor-applications", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setMyApps((prev) => prev.filter((a) => a.id !== id));
+        toast.success("Application withdrawn successfully.");
+      } else {
+        toast.error("Failed to withdraw. Try again.");
+      }
+    } catch {
+      toast.error("Something went wrong.");
+    } finally {
+      setWithdrawing(false);
+      setWithdrawConfirm(null);
+    }
+  };
   const [form, setForm] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
@@ -303,7 +338,7 @@ export default function ProfilePage() {
               </div>
               <div className="divide-y divide-gray-50">
                 {myApps.map((app) => (
-                  <div key={app.id} className="flex items-center gap-3 px-4 py-3">
+                  <div key={app.id as string} className="flex items-center gap-3 px-4 py-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       app.status === "approved" ? "bg-green-100" : app.status === "rejected" ? "bg-red-100" : "bg-amber-100"
                     }`}>
@@ -312,18 +347,60 @@ export default function ProfilePage() {
                        <Clock className="w-4 h-4 text-amber-600 animate-pulse" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{app.businessName}</p>
-                      <p className="text-xs text-gray-400">{app.category} · Applied {app.submittedAt}</p>
+                      <p className="text-sm font-medium text-gray-800 truncate">{app.businessName as string}</p>
+                      <p className="text-xs text-gray-400">{app.category as string} · Applied {app.submittedAt as string}</p>
                     </div>
-                    <Badge className={`text-[10px] capitalize flex-shrink-0 ${
-                      app.status === "approved" ? "bg-green-100 text-green-700" :
-                      app.status === "rejected" ? "bg-red-100 text-red-700" :
-                      "bg-amber-100 text-amber-700"
-                    }`}>
-                      {app.status === "pending" ? "Under Review" : app.status}
-                    </Badge>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Badge className={`text-[10px] capitalize ${
+                        app.status === "approved" ? "bg-green-100 text-green-700" :
+                        app.status === "rejected" ? "bg-red-100 text-red-700" :
+                        "bg-amber-100 text-amber-700"
+                      }`}>
+                        {app.status === "pending" ? "Under Review" : app.status as string}
+                      </Badge>
+                      {app.status === "pending" && (
+                        <button
+                          onClick={() => setWithdrawConfirm(app.id as string)}
+                          className="text-[10px] text-red-500 hover:text-red-700 font-medium border border-red-200 hover:border-red-400 rounded px-2 py-0.5 transition-colors"
+                        >
+                          Withdraw
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Withdraw Confirmation Dialog */}
+          {withdrawConfirm && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <XCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">Withdraw Application?</h3>
+                  <p className="text-sm text-gray-500 mt-1">This will cancel your vendor application. You can reapply anytime.</p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setWithdrawConfirm(null)}
+                    disabled={withdrawing}
+                  >
+                    Keep It
+                  </Button>
+                  <Button
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    onClick={() => handleWithdraw(withdrawConfirm)}
+                    disabled={withdrawing}
+                  >
+                    {withdrawing ? "Withdrawing..." : "Yes, Withdraw"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
