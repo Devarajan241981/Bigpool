@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Shield, CreditCard, Globe, Trash2, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Bell, Shield, CreditCard, Globe, Trash2, Eye, EyeOff, Banknote, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,9 @@ export default function SettingsPage() {
   const [showNew, setShowNew] = useState(false);
   const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
   const [pwLoading, setPwLoading] = useState(false);
+  const [bankForm, setBankForm] = useState({ accountHolder: "", bankAccount: "", confirmAccount: "", ifsc: "", bankName: "", upiId: "" });
+  const [bankLoading, setBankLoading] = useState(false);
+  const [bankSaved, setBankSaved] = useState(false);
   const [notifications, setNotifications] = useState({
     orders: true, promotions: true, refunds: true, newsletter: false,
   });
@@ -43,6 +46,42 @@ export default function SettingsPage() {
     } finally {
       setPwLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (!user?.email) return;
+    fetch(`/api/user/bank-details?email=${encodeURIComponent(user.email)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.bank_account) {
+          setBankForm({
+            accountHolder: data.account_holder ?? "",
+            bankAccount: data.bank_account ?? "",
+            confirmAccount: data.bank_account ?? "",
+            ifsc: data.ifsc ?? "",
+            bankName: data.bank_name ?? "",
+            upiId: data.upi_id ?? "",
+          });
+          setBankSaved(true);
+        }
+      }).catch(() => {});
+  }, [user?.email]);
+
+  const handleBankSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (bankForm.bankAccount !== bankForm.confirmAccount) { toast.error("Account numbers do not match"); return; }
+    if (!bankForm.accountHolder || !bankForm.bankAccount || !bankForm.ifsc) { toast.error("Account holder, account number and IFSC are required"); return; }
+    setBankLoading(true);
+    try {
+      const res = await fetch("/api/user/bank-details", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user?.email, accountHolder: bankForm.accountHolder, bankAccount: bankForm.bankAccount, ifsc: bankForm.ifsc.toUpperCase(), bankName: bankForm.bankName, upiId: bankForm.upiId }),
+      });
+      if (res.ok) { toast.success("Bank details saved securely."); setBankSaved(true); }
+      else { const d = await res.json(); toast.error(d.error ?? "Failed to save"); }
+    } catch { toast.error("Something went wrong."); }
+    finally { setBankLoading(false); }
   };
 
   if (!hasHydrated) return null;
@@ -128,6 +167,58 @@ export default function SettingsPage() {
         <Button className="mt-4 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11" onClick={() => toast.success("Preferences saved!")}>
           Save Preferences
         </Button>
+      </div>
+
+      {/* Bank Account Details */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Banknote className="w-5 h-5 text-[#0d9488]" />
+            <h2 className="font-semibold text-gray-900">Bank Account Details</h2>
+          </div>
+          {bankSaved && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">✓ Saved</span>}
+        </div>
+        <p className="text-xs text-gray-500 mb-5">Used for vendor payouts. Stored securely and never shared.</p>
+        <form onSubmit={handleBankSave} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <Label>Account Holder Name</Label>
+              <Input className="mt-1.5 h-11" placeholder="As per bank records" value={bankForm.accountHolder} onChange={e => setBankForm({...bankForm, accountHolder: e.target.value})} />
+            </div>
+            <div>
+              <Label>Bank Account Number</Label>
+              <Input className="mt-1.5 h-11 font-mono" placeholder="Enter account number" type="password" value={bankForm.bankAccount} onChange={e => setBankForm({...bankForm, bankAccount: e.target.value})} />
+            </div>
+            <div>
+              <Label>Confirm Account Number</Label>
+              <Input className="mt-1.5 h-11 font-mono" placeholder="Re-enter account number" value={bankForm.confirmAccount} onChange={e => setBankForm({...bankForm, confirmAccount: e.target.value})} />
+            </div>
+            <div>
+              <Label>IFSC Code</Label>
+              <Input className="mt-1.5 h-11 uppercase font-mono" placeholder="e.g. SBIN0001234" value={bankForm.ifsc} onChange={e => setBankForm({...bankForm, ifsc: e.target.value.toUpperCase()})} maxLength={11} />
+            </div>
+            <div>
+              <Label>Bank Name <span className="text-gray-400">(optional)</span></Label>
+              <div className="relative mt-1.5">
+                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input className="pl-9 h-11" placeholder="e.g. State Bank of India" value={bankForm.bankName} onChange={e => setBankForm({...bankForm, bankName: e.target.value})} />
+              </div>
+            </div>
+            <div className="sm:col-span-2">
+              <Label>UPI ID <span className="text-gray-400">(optional)</span></Label>
+              <Input className="mt-1.5 h-11" placeholder="e.g. name@upi" value={bankForm.upiId} onChange={e => setBankForm({...bankForm, upiId: e.target.value})} />
+            </div>
+          </div>
+          {bankForm.bankAccount && bankForm.confirmAccount && bankForm.bankAccount !== bankForm.confirmAccount && (
+            <p className="text-xs text-red-500">⚠ Account numbers do not match</p>
+          )}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-xs text-amber-700">🔒 Your bank details are encrypted and only used for processing vendor payouts. Bigpool will never initiate unauthorized transactions.</p>
+          </div>
+          <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11" disabled={bankLoading}>
+            {bankLoading ? "Saving..." : bankSaved ? "Update Bank Details" : "Save Bank Details"}
+          </Button>
+        </form>
       </div>
 
       {/* Saved Payments */}

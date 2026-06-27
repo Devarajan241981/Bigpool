@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Building2, Mail, Phone, User, FileText, CheckCircle, Store, Clock, XCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,44 @@ export default function VendorApplicationPage() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [applyAnother, setApplyAnother] = useState(false);
+  const [savedBank, setSavedBank] = useState<Record<string, string> | null>(null);
+  const [useSavedBank, setUseSavedBank] = useState<boolean | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    businessName: "",
+    gstin: "",
+    category: "",
+    address: "",
+    description: "",
+    bankAccount: "",
+    ifsc: "",
+    bankName: "",
+    accountHolder: "",
+  });
+
+  // Pre-fill name/email/phone from logged-in user + check for saved bank details
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({ ...prev, name: user.name || "", email: user.email || "", phone: user.phone || "" }));
+    if (user.email) {
+      fetch(`/api/user/bank-details?email=${encodeURIComponent(user.email)}`)
+        .then(r => r.json())
+        .then(data => { if (data?.bank_account) setSavedBank(data); })
+        .catch(() => {});
+    }
+  }, [user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When user chooses to use saved bank details
+  useEffect(() => {
+    if (useSavedBank === true && savedBank) {
+      setForm(prev => ({ ...prev, bankAccount: savedBank.bank_account ?? "", ifsc: savedBank.ifsc ?? "", bankName: savedBank.bank_name ?? "", accountHolder: savedBank.account_holder ?? "" }));
+    } else if (useSavedBank === false) {
+      setForm(prev => ({ ...prev, bankAccount: "", ifsc: "", bankName: "", accountHolder: "" }));
+    }
+  }, [useSavedBank]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Applications submitted by this user (matched by email)
   const myApps = applications.filter((a) => a.email === (user?.email ?? ""));
@@ -100,21 +138,7 @@ export default function VendorApplicationPage() {
       </div>
     );
   }
-  const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    password: "",
-    businessName: "",
-    gstin: "",
-    category: "",
-    address: "",
-    description: "",
-    bankAccount: "",
-    ifsc: "",
-  });
-
-  const update = (k: string, v: string) => setForm({ ...form, [k]: v });
+  const update = (k: string, v: string) => setForm((prev) => ({ ...prev, [k]: v }));
 
   const handleSubmit = async () => {
     const payload = {
@@ -270,14 +294,48 @@ export default function VendorApplicationPage() {
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold mb-4">Bank & Documents</h2>
+
+              {/* Saved bank details prompt */}
+              {savedBank?.bank_account && useSavedBank === null && (
+                <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-teal-800 mb-1">💳 You have saved bank details</p>
+                  <p className="text-xs text-teal-600 mb-3">Account ending in ••••{savedBank.bank_account.slice(-4)} · {savedBank.ifsc}</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => setUseSavedBank(true)} className="flex-1 bg-teal-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-teal-700 transition-colors">
+                      Use Saved Details
+                    </button>
+                    <button onClick={() => setUseSavedBank(false)} className="flex-1 bg-white border border-teal-300 text-teal-700 text-sm font-semibold py-2 rounded-lg hover:bg-teal-50 transition-colors">
+                      Enter New Details
+                    </button>
+                  </div>
+                </div>
+              )}
+              {useSavedBank === true && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-green-800">✅ Using saved bank details</p>
+                    <p className="text-xs text-green-600">Account ••••{savedBank?.bank_account?.slice(-4)} · {savedBank?.ifsc}</p>
+                  </div>
+                  <button onClick={() => setUseSavedBank(null)} className="text-xs text-green-600 underline">Change</button>
+                </div>
+              )}
+
+              {useSavedBank !== true && (
+                <>
+              <div>
+                <Label>Account Holder Name</Label>
+                <Input className="mt-1.5" placeholder="As per bank records" value={form.accountHolder} onChange={(e) => update("accountHolder", e.target.value)} />
+              </div>
               <div>
                 <Label>Bank Account Number</Label>
-                <Input placeholder="Your bank account number" value={form.bankAccount} onChange={(e) => update("bankAccount", e.target.value)} />
+                <Input className="mt-1.5" placeholder="Your bank account number" value={form.bankAccount} onChange={(e) => update("bankAccount", e.target.value)} />
               </div>
               <div>
                 <Label>IFSC Code</Label>
-                <Input placeholder="SBIN0001234" value={form.ifsc} onChange={(e) => update("ifsc", e.target.value)} />
+                <Input className="mt-1.5 uppercase font-mono" placeholder="SBIN0001234" value={form.ifsc} onChange={(e) => update("ifsc", e.target.value.toUpperCase())} />
               </div>
+                </>
+              )}
               <div>
                 <Label>PAN Card</Label>
                 <div className="mt-1.5 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-[#0d9488] transition-colors">

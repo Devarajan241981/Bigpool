@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Store, CheckCircle, XCircle, Clock, Search,
-  Mail, FileText, Shield, User,
+  Mail, FileText, Shield, User, Banknote, TrendingUp, IndianRupee, Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,9 @@ export default function SuperAdminSellersPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [selectedApp, setSelectedApp] = useState<SellerApplication | null>(null);
+  const [appBankDetails, setAppBankDetails] = useState<Record<string, string> | null>(null);
+  const [appCommissions, setAppCommissions] = useState<{ totalOrders: number; totalRevenue: number; totalCommission: number; vendorPayout: number; pendingPayout: number } | null>(null);
+  const [payoutProcessing, setPayoutProcessing] = useState(false);
   const { updateStatus: updateAppStatus } = useSellerApplicationStore();
 
   useEffect(() => {
@@ -230,7 +233,15 @@ export default function SuperAdminSellersPage() {
                   <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="font-bold text-xs">{app.submittedAt}</p><p className="text-xs text-gray-500">Applied</p></div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" className="text-xs" onClick={() => setSelectedApp(app)}>
+                  <Button size="sm" variant="outline" className="text-xs" onClick={() => {
+                    setSelectedApp(app);
+                    setAppBankDetails(null);
+                    setAppCommissions(null);
+                    fetch(`/api/user/bank-details?email=${encodeURIComponent(app.email)}`)
+                      .then(r => r.json()).then(setAppBankDetails).catch(() => setAppBankDetails(null));
+                    fetch(`/api/commissions?email=${encodeURIComponent(app.email)}`)
+                      .then(r => r.json()).then(d => setAppCommissions(d.summary ?? null)).catch(() => {});
+                  }}>
                     <FileText className="w-3.5 h-3.5 mr-1.5" /> View Application
                   </Button>
                   {app.status === "pending" && (
@@ -301,43 +312,156 @@ export default function SuperAdminSellersPage() {
       </Dialog>
 
       {/* Application detail dialog */}
-      <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Vendor Application — {selectedApp?.businessName}</DialogTitle></DialogHeader>
-          {selectedApp && (
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {[
-                  { label: "Business Name", value: selectedApp.businessName },
-                  { label: "Applicant", value: selectedApp.name },
-                  { label: "Email", value: selectedApp.email },
-                  { label: "Phone", value: selectedApp.phone || "—" },
-                  { label: "GSTIN", value: selectedApp.gstin || "Not provided" },
-                  { label: "Category", value: selectedApp.category || "—" },
-                  { label: "Bank Account", value: selectedApp.bankAccount ? "****" + selectedApp.bankAccount.slice(-4) : "—" },
-                  { label: "Applied", value: selectedApp.submittedAt },
-                ].map((item) => (
-                  <div key={item.label} className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 mb-0.5">{item.label}</p>
-                    <p className="font-medium text-gray-900">{item.value}</p>
-                  </div>
-                ))}
+      <Dialog open={!!selectedApp} onOpenChange={() => { setSelectedApp(null); setAppBankDetails(null); setAppCommissions(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm">
+                {selectedApp?.businessName?.[0]}
               </div>
-              {selectedApp.description && (
-                <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                  <p className="text-xs text-gray-500 mb-1">Business Description</p>
-                  <p className="text-gray-700">{selectedApp.description}</p>
+              {selectedApp?.businessName}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedApp && (
+            <div className="space-y-5 mt-1">
+
+              {/* Application Info */}
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Application Details</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {[
+                    { label: "Applicant", value: selectedApp.name },
+                    { label: "Email", value: selectedApp.email },
+                    { label: "Phone", value: selectedApp.phone || "—" },
+                    { label: "Category", value: selectedApp.category || "—" },
+                    { label: "GSTIN", value: selectedApp.gstin || "Not provided" },
+                    { label: "Applied", value: selectedApp.submittedAt },
+                  ].map((item) => (
+                    <div key={item.label} className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-500 mb-0.5">{item.label}</p>
+                      <p className="font-semibold text-gray-900 text-sm">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {selectedApp.description && (
+                  <div className="bg-gray-50 rounded-lg p-3 mt-2 text-sm">
+                    <p className="text-xs text-gray-500 mb-1">Business Description</p>
+                    <p className="text-gray-700">{selectedApp.description}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bank / Payout Details */}
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Banknote className="w-3.5 h-3.5" /> Payout Bank Details
+                </p>
+                {appBankDetails?.bank_account ? (
+                  <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 text-white space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">Account Holder</p>
+                      <p className="font-semibold">{appBankDetails.account_holder || "—"}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">Account Number</p>
+                      <p className="font-mono font-semibold">{"•".repeat(appBankDetails.bank_account.length - 4)}{appBankDetails.bank_account.slice(-4)}</p>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-300">IFSC Code</p>
+                      <p className="font-mono font-semibold">{appBankDetails.ifsc || "—"}</p>
+                    </div>
+                    {appBankDetails.bank_name && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-slate-300">Bank</p>
+                        <p className="font-semibold">{appBankDetails.bank_name}</p>
+                      </div>
+                    )}
+                    {appBankDetails.upi_id && (
+                      <div className="flex items-center justify-between border-t border-slate-600 pt-3">
+                        <p className="text-xs text-slate-300">UPI ID</p>
+                        <p className="font-semibold text-green-400">{appBankDetails.upi_id}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                    <Banknote className="w-8 h-8 text-amber-400 mx-auto mb-1.5" />
+                    <p className="text-sm font-medium text-amber-800">No bank details saved yet</p>
+                    <p className="text-xs text-amber-600 mt-0.5">Vendor needs to add bank details in Settings before payout can be processed.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Payout Summary — shown for approved vendors */}
+              {selectedApp.status === "approved" && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" /> Payout Summary
+                  </p>
+                  {appCommissions === null ? (
+                    <div className="py-6 text-center text-xs text-gray-400">Loading commission data...</div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {[
+                          { icon: Package, label: "Total Orders", value: appCommissions.totalOrders.toString(), sub: "All time", color: "text-blue-600" },
+                          { icon: IndianRupee, label: "Total Revenue", value: `₹${appCommissions.totalRevenue.toLocaleString("en-IN")}`, sub: "Gross sales", color: "text-purple-600" },
+                          { icon: TrendingUp, label: "Commission (5%)", value: `₹${appCommissions.totalCommission.toLocaleString("en-IN")}`, sub: "Platform fee", color: "text-red-600" },
+                          { icon: Banknote, label: "Pending Payout", value: `₹${appCommissions.pendingPayout.toLocaleString("en-IN")}`, sub: "To be paid", color: "text-green-600" },
+                        ].map((item) => (
+                          <div key={item.label} className="bg-gray-50 border border-gray-100 rounded-xl p-3">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                              <p className="text-xs text-gray-500">{item.label}</p>
+                            </div>
+                            <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
+                            <p className="text-[10px] text-gray-400">{item.sub}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {appCommissions.totalOrders === 0 ? (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                          ℹ️ No orders yet. Commission data will appear once the vendor starts selling.
+                        </div>
+                      ) : appCommissions.pendingPayout > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 flex justify-between items-center">
+                          <span>⏳ Pending payout for {appCommissions.totalOrders} orders</span>
+                          <span className="font-bold text-amber-800">₹{appCommissions.pendingPayout.toLocaleString("en-IN")}</span>
+                        </div>
+                      )}
+                      {appBankDetails?.bank_account && appCommissions.pendingPayout > 0 && (
+                        <Button
+                          className="w-full mt-3 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold h-11 gap-2"
+                          disabled={payoutProcessing}
+                          onClick={() => {
+                            setPayoutProcessing(true);
+                            setTimeout(() => { setPayoutProcessing(false); toast.success("Payout initiated to " + (appBankDetails.account_holder || selectedApp.name)); }, 1500);
+                          }}
+                        >
+                          <Banknote className="w-4 h-4" />
+                          {payoutProcessing ? "Processing..." : `Process Payout ₹${appCommissions.pendingPayout.toLocaleString("en-IN")} →`}
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
+
+              {/* Action buttons */}
               {selectedApp.status === "pending" && (
-                <div className="flex gap-3">
-                  <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => updateApplicationStatus(selectedApp.id, "approved")}>
+                <div className="flex gap-3 pt-1">
+                  <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold" onClick={() => updateApplicationStatus(selectedApp.id, "approved")}>
                     <CheckCircle className="w-4 h-4 mr-2" /> Approve Vendor
                   </Button>
-                  <Button variant="destructive" className="flex-1" onClick={() => updateApplicationStatus(selectedApp.id, "rejected")}>
+                  <Button variant="destructive" className="flex-1 font-semibold" onClick={() => updateApplicationStatus(selectedApp.id, "rejected")}>
                     <XCircle className="w-4 h-4 mr-2" /> Reject
                   </Button>
                 </div>
+              )}
+              {selectedApp.status === "rejected" && (
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold" onClick={() => updateApplicationStatus(selectedApp.id, "approved")}>
+                  <CheckCircle className="w-4 h-4 mr-2" /> Approve Vendor
+                </Button>
               )}
             </div>
           )}

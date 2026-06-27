@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   Package, TrendingUp, DollarSign, ShoppingBag, Star, Plus,
-  BarChart3, Bell, ArrowUpRight, ChevronRight, Store, BadgeCheck,
+  BarChart3, Bell, ArrowUpRight, ChevronRight, Store, BadgeCheck, Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ const vendorNavItems = [
   { href: "/vendor/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/vendor/products", label: "My Products", icon: Package },
   { href: "/vendor/orders", label: "Orders", icon: ShoppingBag },
+  { href: "/vendor/earnings", label: "My Earnings", icon: Banknote },
   { href: "/vendor/promotions", label: "Promotions & Ads", icon: TrendingUp },
   { href: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/vendor/verified-badge", label: "Get Verified ✓", icon: BadgeCheck },
