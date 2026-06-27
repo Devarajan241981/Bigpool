@@ -183,3 +183,22 @@
 /* ── Scrollbar hide utility ── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Page entry fade-in (covers hydration gap flash) ── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+main > * {
+  animation: page-enter 0.18s ease-out both;
+}
+
+/* ── Prevent badge/count jump on Zustand rehydration ── */
+@keyframes count-pop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+[data-badge] {
+  animation: count-pop 0.2s ease-out both;
+}

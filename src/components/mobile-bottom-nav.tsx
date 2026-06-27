@@ -9,7 +9,7 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const hasHydrated = useHasHydrated();
   const { items } = useCartStore();
-  const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  const cartCount = hasHydrated ? items.reduce((s, i) => s + i.quantity, 0) : 0;
 
   const tabs = [
     { href: "/", icon: Home, label: "Home" },

@@ -918,8 +918,19 @@ export const useRecentlyViewedStore = create<RecentlyViewedStore>()(
 // Returns true after the first client-side render. By that point Zustand
 // persist has already read from localStorage (toThenable is synchronous for
 // localStorage), so gating redirects on this avoids premature redirects.
+//
+// Uses a module-level flag so once ANY component has hydrated in this session,
+// all future renders start as `true` — eliminating the blank-frame flash on
+// page navigation within the same SPA session.
+let _hydrated = false;
+
 export function useHasHydrated() {
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => { setHydrated(true); }, []);
+  const [hydrated, setHydrated] = useState(_hydrated);
+  useEffect(() => {
+    if (!_hydrated) {
+      _hydrated = true;
+      setHydrated(true);
+    }
+  }, []);
   return hydrated;
 }

@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(true);
+  // Start hidden — only show on genuine first visit (avoids 1-frame flash on every subsequent load)
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem("splashed")) { setVisible(false); return; }
+    if (sessionStorage.getItem("splashed")) return; // already seen — stay hidden
     sessionStorage.setItem("splashed", "1");
+    setVisible(true);
     const t = setTimeout(() => setVisible(false), 2400);
     return () => clearTimeout(t);
   }, []);

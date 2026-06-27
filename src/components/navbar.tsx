@@ -71,7 +71,9 @@ export default function Navbar() {
   const { balance } = useWalletStore();
   const { notifications, markAllRead, unreadCount } = useNotificationStore();
 
-  const cartCount = items.reduce((s, i) => s + i.quantity, 0);
+  // Only show counts after hydration to avoid jumping from 0 → real value
+  const cartCount = hasHydrated ? items.reduce((s, i) => s + i.quantity, 0) : 0;
+  const wishlistCount = hasHydrated ? wishlist.length : 0;
   const myNotifications = notifications.filter((n) => !n.userId || n.userId === user?.id);
   const unread = myNotifications.filter((n) => !n.read).length;
 
@@ -321,9 +323,9 @@ export default function Navbar() {
             <Link href="/customer/profile/wishlist" className="hidden md:block">
               <button className="text-white hover:bg-white/10 relative p-2 rounded transition-colors">
                 <Heart className="w-5 h-5" />
-                {wishlist.length > 0 && (
+                {wishlistCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] bg-[#0d9488] text-white flex items-center justify-center">
-                    {wishlist.length}
+                    {wishlistCount}
                   </Badge>
                 )}
               </button>
