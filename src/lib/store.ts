@@ -96,9 +96,11 @@ interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
   accessToken: string | null;
+  sessionReady: boolean; // true once AuthProvider's refresh attempt finishes
   login: (user: User, accessToken: string) => void;
   logout: () => void;
   setAccessToken: (token: string) => void;
+  markSessionReady: () => void;
   updateUser: (patch: Partial<User>) => void;
 }
 
@@ -179,20 +181,21 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       isAuthenticated: false,
       accessToken: null,
-      login: (user, accessToken) => set({ user, isAuthenticated: true, accessToken }),
+      sessionReady: false,
+      login: (user, accessToken) => set({ user, isAuthenticated: true, accessToken, sessionReady: true }),
       logout: () => {
         if (typeof window !== "undefined") {
           fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
         }
-        set({ user: null, isAuthenticated: false, accessToken: null });
+        set({ user: null, isAuthenticated: false, accessToken: null, sessionReady: true });
       },
-      setAccessToken: (token) => set({ accessToken: token }),
+      setAccessToken: (token) => set({ accessToken: token, sessionReady: true }),
+      markSessionReady: () => set({ sessionReady: true }),
       updateUser: (patch) => set((state) => ({ user: state.user ? { ...state.user, ...patch } : null })),
     }),
     {
       name: "auth-store",
       storage: ssrStorage,
-      // accessToken is intentionally NOT persisted — lives in memory only
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
     }
   )

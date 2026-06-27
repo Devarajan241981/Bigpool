@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSellerApplicationStore, useAuthStore, useHasHydrated, getAuthHeaders } from "@/lib/store";
+
 // useSellerApplicationStore kept for updateStatus (syncs same-browser customer status view)
 import type { Seller } from "@/lib/types";
 import type { SellerApplication } from "@/lib/store";
@@ -21,7 +22,7 @@ type DisplayEntry =
   | { type: "application"; data: SellerApplication };
 
 export default function SuperAdminSellersPage() {
-  const { user, isAuthenticated, accessToken } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -57,18 +58,17 @@ export default function SuperAdminSellersPage() {
   };
 
   useEffect(() => {
-    // Fetch whenever auth state or token changes — AuthProvider restores the
-    // access token asynchronously on page refresh, so we must re-run when it
-    // arrives. Fetching with no token returns 401 (handled gracefully).
-    if (hasHydrated && isAuthenticated && user?.role === "admin") {
+    // Wait until AuthProvider has finished the refresh attempt (sessionReady)
+    // so we always fetch with a valid token, not a null one.
+    if (hasHydrated && sessionReady && isAuthenticated && user?.role === "admin") {
       fetchData();
     }
-  }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated, sessionReady, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 
-  // Token not yet restored by AuthProvider (page refresh) — show loading shimmer
-  const tokenLoading = !accessToken && isAuthenticated;
+  // sessionReady = false means AuthProvider is still trying the refresh
+  const tokenLoading = !sessionReady;
 
   const updateSellerStatus = (sellerId: string, status: "approved" | "rejected") => {
     fetch(`/api/sellers/${sellerId}`, {
@@ -308,14 +308,22 @@ export default function SuperAdminSellersPage() {
         {!tokenLoading && filtered.length === 0 && (
           <div className="text-center py-12 text-gray-400">
             <Store className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No sellers or applications found</p>
-            {allEntries.length === 0 && (
-              <p className="text-xs mt-2 text-gray-300">
-                If you just logged in, try clicking{" "}
-                <button onClick={fetchData} className="text-[#0d9488] underline">Refresh</button>.
-                If still empty,{" "}
-                <a href="/superadmin/login" className="text-[#0d9488] underline">re-login here</a>.
-              </p>
+            {!accessToken ? (
+              <>
+                <p className="text-sm font-medium text-gray-500">Session token could not be restored</p>
+                <p className="text-xs mt-1 text-gray-400">Your login cookie may have expired.</p>
+                <a
+                  href="/superadmin/login"
+                  className="inline-block mt-3 bg-[#0d9488] text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-[#0f766e] transition-colors"
+                >
+                  Log in again
+                </a>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">No sellers or applications found</p>
+                <button onClick={fetchData} className="text-xs mt-2 text-[#0d9488] underline">Refresh</button>
+              </>
             )}
           </div>
         )}
