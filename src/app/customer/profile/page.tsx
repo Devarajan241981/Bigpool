@@ -129,31 +129,40 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Mobile quick nav grid */}
-      <div className="grid grid-cols-3 gap-2 mb-4 md:hidden">
+      {/* Mobile quick nav — clean list rows */}
+      <div className="mb-4 md:hidden bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
         {[
-          { href: "/customer/profile/orders", icon: Package, label: "Orders", color: "text-blue-600 bg-blue-50" },
-          { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", color: "text-red-600 bg-red-50" },
-          { href: "/customer/profile/refer", icon: Gift, label: "Refer ₹100", color: "text-green-600 bg-green-50" },
-          { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
-          { href: "/customer/profile/notifications", icon: Bell, label: "Alerts", color: "text-teal-600 bg-teal-50" },
-          { href: "/customer/profile/settings", icon: Settings, label: "Settings", color: "text-gray-600 bg-gray-100" },
-          { href: "/customer/help", icon: HelpCircle, label: "Help", color: "text-orange-600 bg-orange-50" },
-        ].map((item) => (
+          { href: "/customer/profile/orders", icon: Package, label: "My Orders", sub: "Track & manage orders", color: "bg-blue-500" },
+          { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", sub: "Saved products", color: "bg-red-500" },
+          { href: "/customer/profile/wallet", icon: Wallet, label: "Wallet", sub: "Balance & top-up", color: "bg-emerald-500" },
+          { href: "/customer/profile/refer", icon: Gift, label: "Refer & Earn ₹100", sub: "Invite friends, earn rewards", color: "bg-green-500" },
+          { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", sub: "Returns & refund status", color: "bg-purple-500" },
+          { href: "/customer/profile/notifications", icon: Bell, label: "Notifications", sub: "Alerts & updates", color: "bg-teal-500" },
+          { href: "/customer/profile/settings", icon: Settings, label: "Settings", sub: "Account preferences", color: "bg-gray-500" },
+          { href: "/customer/help", icon: HelpCircle, label: "Help & Support", sub: "FAQs & contact us", color: "bg-orange-500" },
+        ].map((item, i, arr) => (
           <Link key={item.href} href={item.href}>
-            <div className="bg-white border border-gray-200 rounded-xl p-3 text-center hover:shadow-sm transition-shadow active:scale-95">
-              <div className={`rounded-lg p-2 inline-flex mb-1.5 ${item.color}`}>
-                <item.icon className="w-4 h-4" />
+            <div className={`flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 active:bg-gray-100 transition-colors ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}>
+              <div className={`${item.color} rounded-xl w-9 h-9 flex items-center justify-center flex-shrink-0`}>
+                <item.icon className="w-4.5 h-4.5 text-white w-[18px] h-[18px]" />
               </div>
-              <p className="text-[11px] font-medium text-gray-700">{item.label}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800">{item.label}</p>
+                <p className="text-xs text-gray-400">{item.sub}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
             </div>
           </Link>
         ))}
-        <button onClick={handleLogout} className="bg-white border border-red-100 rounded-xl p-3 text-center hover:bg-red-50 active:scale-95 transition-all">
-          <div className="rounded-lg p-2 inline-flex mb-1.5 text-red-600 bg-red-50">
-            <LogOut className="w-4 h-4" />
+        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-red-50 active:bg-red-100 transition-colors border-t border-gray-100">
+          <div className="bg-red-500 rounded-xl w-9 h-9 flex items-center justify-center flex-shrink-0">
+            <LogOut className="w-[18px] h-[18px] text-white" />
           </div>
-          <p className="text-[11px] font-medium text-red-600">Sign Out</p>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-medium text-red-600">Sign Out</p>
+            <p className="text-xs text-gray-400">Log out of your account</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300" />
         </button>
       </div>
 
@@ -305,25 +314,6 @@ export default function ProfilePage() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { href: "/customer/profile/orders", icon: Package, label: "My Orders", color: "text-blue-600 bg-blue-50" },
-              { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", color: "text-red-600 bg-red-50" },
-              { href: "/customer/profile/wallet", icon: Wallet, label: "Wallet", color: "text-green-600 bg-green-50" },
-              { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
-            ].map((item) => (
-              <Link key={item.href} href={item.href}>
-                <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
-                  <div className={`rounded-lg p-2 inline-flex mb-2 ${item.color}`}>
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <p className="text-xs font-medium text-gray-700">{item.label}</p>
-                </div>
-              </Link>
-            ))}
           </div>
 
           {/* My Applications */}

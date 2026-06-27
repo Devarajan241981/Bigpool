@@ -322,6 +322,43 @@ const SQA: Record<string, QANode> = {
   },
 };
 
+/* ─── Admin Q&A (static fallback answers) ───────────────────── */
+const AQA: Record<string, QANode> = {
+  admin_dashboard: {
+    answer: "Your admin dashboard shows platform overview, pending actions, and live metrics. You can manage sellers, refunds, products, and promotions from there.",
+    link: { text: "Open Dashboard", href: "/superadmin/dashboard" },
+    chips: [
+      { label: "📊 Revenue this month", key: "__admin_revenue__" },
+      { label: "🛒 Last sale", key: "__admin_last_sale__" },
+      { label: "👥 Pending applications", key: "__admin_pending_apps__" },
+    ],
+  },
+  admin_sellers: {
+    answer: "Manage all sellers from Superadmin → Sellers. You can view their applications, approve or reject, and see their active product listings.",
+    link: { text: "Manage Sellers", href: "/superadmin/sellers" },
+    chips: [
+      { label: "👥 Pending applications", key: "__admin_pending_apps__" },
+      { label: "📈 Platform overview", key: "__admin_overview__" },
+    ],
+  },
+  admin_refunds: {
+    answer: "All refund requests can be processed from Superadmin → Refunds. Approve or reject each request — approved amounts go to the customer's wallet instantly.",
+    link: { text: "Manage Refunds", href: "/superadmin/refunds" },
+    chips: [
+      { label: "📊 Revenue this month", key: "__admin_revenue__" },
+      { label: "Back to admin menu", key: "__home__" },
+    ],
+  },
+  admin_promotions: {
+    answer: "Vendor promotion requests (banners, featured listings, sponsored ads) are reviewed from Superadmin → Promotions. Each request shows pricing tier and vendor details.",
+    link: { text: "Manage Promotions", href: "/superadmin/promotions" },
+    chips: [
+      { label: "📈 Platform overview", key: "__admin_overview__" },
+      { label: "Back to admin menu", key: "__home__" },
+    ],
+  },
+};
+
 /* ─── Guest Q&A ──────────────────────────────────────────────── */
 const GQA: Record<string, QANode> = {
   create_account: {
@@ -363,6 +400,16 @@ const GQA: Record<string, QANode> = {
 
 /* ─── Initial chips per role ─────────────────────────────────── */
 const QUICK: Record<string, Chip[]> = {
+  admin: [
+    { label: "📊 Revenue this month", key: "__admin_revenue__" },
+    { label: "🛒 Last sale", key: "__admin_last_sale__" },
+    { label: "📦 Orders today", key: "__admin_today_orders__" },
+    { label: "👥 Pending vendor apps", key: "__admin_pending_apps__" },
+    { label: "💰 Total transactions", key: "__admin_overview__" },
+    { label: "🏪 Active sellers", key: "__admin_active_sellers__" },
+    { label: "✅ Manage refunds", key: "admin_refunds" },
+    { label: "📢 Promotions queue", key: "admin_promotions" },
+  ],
   customer: [
     { label: "📦 Where is my order?", key: "track_order" },
     { label: "📋 My Orders", key: "__my_orders__" },
@@ -413,6 +460,13 @@ const KEYWORDS: [string, string[]][] = [
   // guest
   ["create_account", ["create account", "sign up", "register", "new account"]],
   ["sell_on_bigpool", ["sell", "become seller", "vendor"]],
+  // admin
+  ["__admin_revenue__", ["revenue", "earnings", "income", "how much", "money made", "gmv", "sales total"]],
+  ["__admin_last_sale__", ["last sale", "last order", "recent order", "latest sale", "recent sale", "last transaction"]],
+  ["__admin_today_orders__", ["today", "orders today", "today's order", "today's sales"]],
+  ["__admin_pending_apps__", ["pending", "application", "vendor request", "pending seller", "new vendor"]],
+  ["__admin_overview__", ["overview", "summary", "total transaction", "platform stats", "dashboard", "all stats"]],
+  ["__admin_active_sellers__", ["active seller", "how many seller", "seller count", "total seller"]],
 ];
 
 function findMatch(text: string): string | null {
@@ -491,9 +545,9 @@ export default function ChatSupport() {
   const { user } = useAuthStore();
   const { orders } = useOrderStore();
 
-  const role: "customer" | "seller" | "guest" =
-    user?.role === "seller" ? "seller" : user?.role === "customer" ? "customer" : "guest";
-  const qa = role === "seller" ? SQA : role === "customer" ? CQA : GQA;
+  const role: "admin" | "customer" | "seller" | "guest" =
+    user?.role === "admin" ? "admin" : user?.role === "seller" ? "seller" : user?.role === "customer" ? "customer" : "guest";
+  const qa = role === "admin" ? AQA : role === "seller" ? SQA : role === "customer" ? CQA : GQA;
   const quickChips = QUICK[role];
 
   const userOrders = orders.filter((o) => o.customerId === user?.id).slice().reverse();
@@ -517,7 +571,9 @@ export default function ChatSupport() {
     if (msgs.length > 0) return;
     const name = user?.name?.split(" ")[0] ?? "there";
     const greeting =
-      role === "seller"
+      role === "admin"
+        ? `Welcome back, ${name}! 🛡️ I'm your Bigpool business assistant. Ask me about revenue, orders, transactions, seller applications, or platform stats. I'll fetch live data for you!`
+        : role === "seller"
         ? `Hi ${name}! 👋 I'm Bigpool's support assistant. I can help with your seller account or your own purchases. What can I help you with today?`
         : role === "customer"
         ? `Hi ${name}! 👋 I'm your Bigpool support assistant. I can help with orders, returns, refunds, and more. What can I help you with?`
@@ -662,6 +718,95 @@ export default function ChatSupport() {
       return;
     }
 
+    /* ── admin data queries ── */
+    if (chip.key.startsWith("__admin_")) {
+      const labelMap: Record<string, string> = {
+        __admin_revenue__: "Revenue this month",
+        __admin_last_sale__: "Last sale",
+        __admin_today_orders__: "Orders today",
+        __admin_pending_apps__: "Pending vendor applications",
+        __admin_overview__: "Platform overview",
+        __admin_active_sellers__: "Active sellers",
+      };
+      addMsg({ from: "user", text: labelMap[chip.key] ?? chip.label });
+      setChips([]);
+      setTyping(true);
+      (async () => {
+        try {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+          const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+          if (chip.key === "__admin_revenue__") {
+            const res = await fetch("/api/orders");
+            const data = await res.json();
+            const orders = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+            const thisMonth = orders.filter((o: { createdAt: string; status: string }) => o.createdAt >= monthStart && o.status !== "cancelled");
+            const revenue = thisMonth.reduce((s: number, o: { total?: number }) => s + (o.total ?? 0), 0);
+            setTyping(false);
+            addMsg({ from: "bot", text: `📊 **Revenue this month (${now.toLocaleString("en-IN", { month: "long" })})**\n\n₹${revenue.toLocaleString("en-IN")} from **${thisMonth.length} orders**\n\nAll-time total orders: ${orders.filter((o: { status: string }) => o.status !== "cancelled").length}`, link: { text: "View Full Analytics", href: "/superadmin/sellers" } });
+          } else if (chip.key === "__admin_last_sale__") {
+            const res = await fetch("/api/orders");
+            const data = await res.json();
+            const orders = (Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : []).filter((o: { status: string }) => o.status !== "cancelled");
+            orders.sort((a: { createdAt: string }, b: { createdAt: string }) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            const last = orders[0];
+            setTyping(false);
+            if (!last) {
+              addMsg({ from: "bot", text: "No completed orders found yet." });
+            } else {
+              const when = new Date(last.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+              addMsg({ from: "bot", text: `🛒 **Last sale**\n\nAmount: **₹${(last.total ?? 0).toLocaleString("en-IN")}**\nStatus: ${last.status}\nCustomer: ${last.customerId ?? "—"}\nTime: ${when}\n\nOrder ID: ${last.id}` });
+            }
+          } else if (chip.key === "__admin_today_orders__") {
+            const res = await fetch("/api/orders");
+            const data = await res.json();
+            const orders = Array.isArray(data?.orders) ? data.orders : Array.isArray(data) ? data : [];
+            const today = orders.filter((o: { createdAt: string }) => o.createdAt >= todayStart);
+            const todayRev = today.reduce((s: number, o: { total?: number }) => s + (o.total ?? 0), 0);
+            setTyping(false);
+            addMsg({ from: "bot", text: `📦 **Today's orders (${now.toLocaleDateString("en-IN", { dateStyle: "medium" })})**\n\n${today.length} orders · ₹${todayRev.toLocaleString("en-IN")} revenue\n\n${today.slice(0, 3).map((o: { id: string; status: string; total?: number }) => `• ${o.id.slice(-10)} — ₹${(o.total ?? 0).toLocaleString("en-IN")} (${o.status})`).join("\n")}${today.length > 3 ? `\n…and ${today.length - 3} more` : ""}` });
+          } else if (chip.key === "__admin_pending_apps__") {
+            const res = await fetch("/api/vendor-applications");
+            const data = await res.json();
+            const apps = Array.isArray(data?.applications) ? data.applications : Array.isArray(data) ? data : [];
+            const pending = apps.filter((a: { status: string }) => a.status === "pending");
+            setTyping(false);
+            addMsg({ from: "bot", text: `👥 **Pending vendor applications: ${pending.length}**\n\n${pending.slice(0, 5).map((a: { businessName?: string; id: string }) => `• ${a.businessName ?? a.id}`).join("\n")}${pending.length > 5 ? `\n…and ${pending.length - 5} more` : pending.length === 0 ? "No pending applications right now." : ""}`, link: { text: "Review Applications", href: "/superadmin/sellers" } });
+          } else if (chip.key === "__admin_active_sellers__") {
+            const res = await fetch("/api/sellers");
+            const data = await res.json();
+            const sellers = Array.isArray(data?.sellers) ? data.sellers : Array.isArray(data) ? data : [];
+            const active = sellers.filter((s: { isActive?: boolean; status?: string }) => s.isActive !== false && s.status !== "suspended");
+            setTyping(false);
+            addMsg({ from: "bot", text: `🏪 **Active sellers: ${active.length}** of ${sellers.length} total\n\n${active.slice(0, 5).map((s: { businessName?: string; name?: string }) => `• ${s.businessName ?? s.name ?? "—"}`).join("\n")}${active.length > 5 ? `\n…and ${active.length - 5} more` : ""}`, link: { text: "View All Sellers", href: "/superadmin/sellers" } });
+          } else if (chip.key === "__admin_overview__") {
+            const [ordRes, appRes] = await Promise.allSettled([fetch("/api/orders"), fetch("/api/vendor-applications")]);
+            const ordData = ordRes.status === "fulfilled" ? await ordRes.value.json() : {};
+            const appData = appRes.status === "fulfilled" ? await appRes.value.json() : {};
+            const orders = Array.isArray(ordData?.orders) ? ordData.orders : Array.isArray(ordData) ? ordData : [];
+            const apps = Array.isArray(appData?.applications) ? appData.applications : Array.isArray(appData) ? appData : [];
+            const thisMonthOrders = orders.filter((o: { createdAt: string; status: string }) => o.createdAt >= monthStart && o.status !== "cancelled");
+            const monthRev = thisMonthOrders.reduce((s: number, o: { total?: number }) => s + (o.total ?? 0), 0);
+            const pendingApps = apps.filter((a: { status: string }) => a.status === "pending").length;
+            const todayOrders = orders.filter((o: { createdAt: string }) => o.createdAt >= todayStart);
+            setTyping(false);
+            addMsg({ from: "bot", text: `📈 **Platform Overview**\n\n💰 Revenue this month: **₹${monthRev.toLocaleString("en-IN")}**\n📦 Orders this month: **${thisMonthOrders.length}**\n🛒 Orders today: **${todayOrders.length}**\n👥 Pending vendor apps: **${pendingApps}**\n\nAll-time orders: ${orders.length}`, link: { text: "Open Dashboard", href: "/superadmin/dashboard" } });
+          }
+        } catch {
+          setTyping(false);
+          addMsg({ from: "bot", text: "Couldn't fetch live data right now. Check the dashboard directly for the latest stats." });
+        }
+        setChips([
+          { label: "📊 Revenue this month", key: "__admin_revenue__" },
+          { label: "🛒 Last sale", key: "__admin_last_sale__" },
+          { label: "📦 Orders today", key: "__admin_today_orders__" },
+          { label: "👥 Pending apps", key: "__admin_pending_apps__" },
+          { label: "📈 Platform overview", key: "__admin_overview__" },
+        ]);
+      })();
+      return;
+    }
+
     /* ── normal chip ── */
     addMsg({ from: "user", text: chip.label.replace(/^[^\s]*\s/, "") });
     setChips([]);
@@ -703,6 +848,10 @@ export default function ChatSupport() {
         handleChip({ label: "My Orders", key: "__my_orders__" });
         return;
       }
+      if (key && key.startsWith("__admin_")) {
+        handleChip({ label: key, key });
+        return;
+      }
       const node = key ? resolveNode(key) : null;
       if (node) {
         addMsg({ from: "bot", text: node.answer, link: node.link });
@@ -722,12 +871,14 @@ export default function ChatSupport() {
     setTyping(false);
   };
 
-  const roleLabel = role === "seller" ? "Bigpool Support" : role === "customer" ? "Customer Support" : "Bigpool Support";
-  const roleColor = role === "seller" ? "bg-indigo-600" : "bg-[#0d9488]";
-  const chipBorderClass = roleColor === "bg-indigo-600"
+  const roleLabel = role === "admin" ? "Admin Business Agent" : role === "seller" ? "Bigpool Support" : role === "customer" ? "Customer Support" : "Bigpool Support";
+  const roleColor = role === "admin" ? "bg-purple-700" : role === "seller" ? "bg-indigo-600" : "bg-[#0d9488]";
+  const chipBorderClass = role === "admin"
+    ? "border-purple-200 text-purple-700 hover:bg-purple-50"
+    : roleColor === "bg-indigo-600"
     ? "border-indigo-200 text-indigo-700 hover:bg-indigo-50"
     : "border-teal-200 text-teal-700 hover:bg-teal-50";
-  const linkTextClass = roleColor === "bg-indigo-600" ? "text-indigo-600" : "text-[#0d9488]";
+  const linkTextClass = role === "admin" ? "text-purple-700" : roleColor === "bg-indigo-600" ? "text-indigo-600" : "text-[#0d9488]";
 
   return (
     <>
