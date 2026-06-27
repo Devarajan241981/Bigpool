@@ -22,7 +22,7 @@ const adminNavItems = [
 ];
 
 export default function SuperAdminDashboard() {
-  const { user, isAuthenticated, accessToken } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const { applications } = useSellerApplicationStore();
   const { products, fetchProducts } = useProductStore();
   const hasHydrated = useHasHydrated();

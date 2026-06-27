@@ -10,7 +10,7 @@ import type { RefundRequest } from "@/lib/types";
 import { toast } from "sonner";
 
 export default function SuperAdminRefundsPage() {
-  const { user, isAuthenticated, accessToken } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
@@ -18,6 +18,7 @@ export default function SuperAdminRefundsPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
 
   useEffect(() => {

@@ -19,7 +19,7 @@ const EMPTY_FORM = {
 };
 
 export default function SuperAdminVouchersPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const { vouchers, addVoucher, updateVoucher, deleteVoucher } = useVoucherStore();
@@ -30,6 +30,7 @@ export default function SuperAdminVouchersPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 

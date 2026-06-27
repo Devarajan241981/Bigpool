@@ -10,7 +10,7 @@ import { useAuthStore, useHasHydrated, useCommissionStore, useBadgeStore } from 
 import { toast } from "sonner";
 
 export default function CommissionsPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const { tiers, updateFee, toggleActive, resetDefaults } = useCommissionStore();
@@ -20,6 +20,7 @@ export default function CommissionsPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 

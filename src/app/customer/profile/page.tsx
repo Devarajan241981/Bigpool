@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore, useOrderStore, getAuthHeaders } from "@/lib/store";
+import { useAuthStore, useOrderStore, useHasHydrated, getAuthHeaders } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ const navItems = [
 
 export default function ProfilePage() {
   const { user, isAuthenticated, logout, updateUser } = useAuthStore();
+  const hasHydrated = useHasHydrated();
   const { orders, fetchOrders } = useOrderStore();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -76,6 +77,10 @@ export default function ProfilePage() {
     state: user?.address?.state || "",
     pincode: user?.address?.pincode || "",
   });
+
+  // Wait for store hydration so we don't flash the sign-in screen during
+  // pull-to-refresh or hard reload while the user IS logged in
+  if (!hasHydrated) return null;
 
   if (!isAuthenticated) {
     return (

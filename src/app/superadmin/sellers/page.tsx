@@ -39,7 +39,11 @@ export default function SuperAdminSellersPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
-  }, [hasHydrated, isAuthenticated, user, router]);
+    // If session restore finished but no token — cookie expired, send to login
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") {
+      router.push("/superadmin/login");
+    }
+  }, [hasHydrated, sessionReady, isAuthenticated, accessToken, user, router]);
 
   const fetchData = async () => {
     const h = getAuthHeaders();
@@ -67,7 +71,6 @@ export default function SuperAdminSellersPage() {
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
 
-  // sessionReady = false means AuthProvider is still trying the refresh
   const tokenLoading = !sessionReady;
 
   const updateSellerStatus = (sellerId: string, status: "approved" | "rejected") => {

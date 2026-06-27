@@ -11,7 +11,7 @@ import { useAuthStore, useHasHydrated, useProductStore } from "@/lib/store";
 import { toast } from "sonner";
 
 export default function SuperAdminProductsPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const { products, fetchProducts } = useProductStore();
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function SuperAdminProductsPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
 
   useEffect(() => {

@@ -29,7 +29,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function SuperAdminPromotionsPage() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [requests, setRequests] = useState<PromotionRequest[]>([]);
@@ -37,6 +37,7 @@ export default function SuperAdminPromotionsPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
+    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
 
   useEffect(() => {
