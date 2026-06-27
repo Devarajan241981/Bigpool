@@ -1,4 +1,4 @@
-const CACHE = "bigpool-v3";
+const CACHE = "bigpool-v4";
 
 const STATIC = ["/", "/customer/products", "/customer/cart"];
 
@@ -33,15 +33,23 @@ self.addEventListener("fetch", (e) => {
 self.addEventListener("push", (e) => {
   if (!e.data) return;
   const data = e.data.json();
+
+  // If the app is open and visible in any tab, skip the system notification —
+  // the in-app bell already handles it. Showing a system notification while the
+  // app is in the foreground is what causes audio interruptions.
   e.waitUntil(
-    self.registration.showNotification(data.title || "Bigpool", {
-      body: data.body || "",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      tag: data.tag || "bigpool",
-      data: { url: data.url || "/" },
-      vibrate: [200, 100, 200],
-      requireInteraction: false,
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const appIsOpen = list.some((c) => c.visibilityState === "visible");
+      if (appIsOpen) return; // App is in foreground — don't fire OS notification
+      return self.registration.showNotification(data.title || "Bigpool", {
+        body: data.body || "",
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: data.tag || "bigpool",
+        data: { url: data.url || "/" },
+        vibrate: [200, 100, 200],
+        requireInteraction: false,
+      });
     })
   );
 });

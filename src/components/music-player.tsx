@@ -28,13 +28,18 @@ export default function MusicPlayer() {
   useEffect(() => {
     const audio = new Audio();
     audio.volume = 0.35;
-    audio.preload = "none";
+    // "auto" tells the browser to buffer the whole file before playing.
+    // This prevents network interruptions (push events, auth refreshes) from
+    // causing audio to stutter or slow down mid-song.
+    audio.preload = "auto";
     audioRef.current = audio;
 
     audio.addEventListener("ended", () => {
       const next = randomTrack(idxRef.current);
       idxRef.current = next;
       audio.src = TRACKS[next];
+      // Load fully before playing to avoid stutter on track change
+      audio.load();
       audio.play().catch(() => {});
     });
 
@@ -55,6 +60,7 @@ export default function MusicPlayer() {
         const idx = randomTrack(-1);
         idxRef.current = idx;
         audio.src = TRACKS[idx];
+        audio.load(); // Start buffering immediately
       }
       audio.play().catch(() => {});
       setOn(true);
