@@ -32,7 +32,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user?.email, currentPassword: pwForm.current, newPassword: pwForm.newPw }),
+        body: JSON.stringify({ email: user?.email, name: user?.name, currentPassword: pwForm.current, newPassword: pwForm.newPw }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Failed to change password"); return; }
