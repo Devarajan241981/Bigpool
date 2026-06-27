@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Bigpool",
+    title: " ",
   },
   other: {
     "mobile-web-app-capable": "yes",
