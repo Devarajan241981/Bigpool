@@ -193,26 +193,26 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
   const currentStepIdx = isCancelled ? lastProgressStatus : statusSteps.indexOf(order.status);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <Link href="/customer/profile/orders" className="inline-flex items-center gap-1.5 text-sm text-[#0d9488] hover:underline mb-5">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <Link href="/customer/profile/orders" className="inline-flex items-center gap-1.5 text-sm text-[#0d9488] hover:underline mb-4 md:mb-5">
         <ChevronLeft className="w-4 h-4" /> Back to Orders
       </Link>
 
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Order #{order.id}</h1>
+      <div className="flex items-start justify-between mb-4 md:mb-6 gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-2xl font-bold text-gray-900 truncate">Order #{order.id}</h1>
           <p className="text-sm text-gray-500">Placed on {order.createdAt}</p>
         </div>
-        <Badge className={`capitalize ${statusColor[order.status]}`}>
+        <Badge className={`capitalize flex-shrink-0 ${statusColor[order.status]}`}>
           {order.status.replace(/_/g, " ")}
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
           {/* Tracking Progress */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
               <Truck className="w-5 h-5 text-[#0d9488]" />
               <h2 className="font-semibold text-gray-900">Tracking</h2>
               {order.status === "delivered" && (
@@ -222,8 +222,9 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
               )}
             </div>
 
-            {/* Progress bar */}
-            <div className="flex items-center mb-8 overflow-x-auto pb-2">
+            {/* Progress bar — scrollable on mobile */}
+            <div className="overflow-x-auto pb-2 -mx-1">
+              <div className="flex items-center min-w-[400px] px-1 mb-6">
               {statusSteps.map((s, i) => {
                 const done = i < currentStepIdx;
                 const active = i === currentStepIdx;
@@ -231,7 +232,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                 return (
                   <div key={s} className="flex items-center flex-1 min-w-0">
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                      <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 transition-all ${
                         cancelledHere
                           ? "bg-red-500 border-red-500 text-white"
                           : done || active
@@ -239,14 +240,14 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                             : "border-gray-300 bg-white text-gray-400"
                       }`}>
                         {cancelledHere ? (
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="w-3.5 h-3.5" />
                         ) : done ? (
-                          <CheckCircle className="w-4 h-4" />
+                          <CheckCircle className="w-3.5 h-3.5" />
                         ) : (
                           <span className="text-xs font-bold">{i + 1}</span>
                         )}
                       </div>
-                      <p className={`text-[10px] mt-1 text-center leading-tight max-w-14 ${
+                      <p className={`text-[9px] md:text-[10px] mt-1 text-center leading-tight w-12 md:w-14 ${
                         cancelledHere ? "text-red-500 font-medium" : done || active ? "text-gray-800 font-medium" : "text-gray-400"
                       }`}>
                         {cancelledHere ? "Cancelled" : statusLabel[s]}
@@ -260,6 +261,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                   </div>
                 );
               })}
+              </div>
             </div>
 
             {/* Cancelled banner */}
@@ -302,19 +304,19 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Items */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
             <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Package className="w-4 h-4" /> Order Items
             </h2>
             <div className="space-y-4">
               {order.items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex gap-4">
+                <div key={product.id} className="flex gap-3 md:gap-4">
                   <Link href={`/customer/products/${product.id}`}>
-                    <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded-lg" />
+                    <img src={product.images[0]} alt={product.name} className="w-14 h-14 md:w-16 md:h-16 object-cover rounded-lg flex-shrink-0" />
                   </Link>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <Link href={`/customer/products/${product.id}`}>
-                      <p className="text-sm font-medium hover:text-[#0d9488]">{product.name}</p>
+                      <p className="text-sm font-medium hover:text-[#0d9488] line-clamp-2">{product.name}</p>
                     </Link>
                     <p className="text-xs text-gray-500">Qty: {quantity}</p>
                     <p className="text-sm font-bold mt-1">₹{(product.price * quantity).toLocaleString()}</p>
@@ -327,7 +329,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
 
         {/* Order details sidebar */}
         <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-5">
             <h3 className="font-semibold text-gray-800 mb-3">Delivery Address</h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p className="font-medium text-gray-900">{order.customerName}</p>
@@ -338,7 +340,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-5">
             <h3 className="font-semibold text-gray-800 mb-3">Payment Info</h3>
             <div className="text-sm space-y-2">
               <div className="flex justify-between text-gray-600">
@@ -357,7 +359,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
 
           {/* Refund status card for cancelled orders */}
           {order.status === "cancelled" && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-5">
               <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-[#0d9488]" /> Refund Status
               </h3>
@@ -388,7 +390,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                     </div>
                   )}
                   <Link href="/customer/profile/refunds" className="block mt-2">
-                    <Button size="sm" className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs">
+                    <Button size="sm" className="w-full bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs h-9">
                       {orderRefund.refundMethod ? "Track Refund" : "Choose Refund Method →"}
                     </Button>
                   </Link>
@@ -397,7 +399,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                 <div className="space-y-2">
                   <p className="text-sm text-gray-500">Refund is being initiated for this order.</p>
                   <Link href="/customer/profile/refunds" className="block">
-                    <Button size="sm" variant="outline" className="w-full text-xs">View Refunds Page</Button>
+                    <Button size="sm" variant="outline" className="w-full text-xs h-9">View Refunds Page</Button>
                   </Link>
                 </div>
               )}
@@ -407,7 +409,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           <div className="space-y-2">
             {order.status === "delivered" && (
               <Link href="/customer/profile/refunds">
-                <Button variant="outline" className="w-full text-sm">
+                <Button variant="outline" className="w-full text-sm h-11">
                   Return / Refund
                 </Button>
               </Link>
@@ -415,7 +417,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
             {CANCELLABLE.includes(order.status) && (
               <Button
                 variant="outline"
-                className="w-full text-sm gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                className="w-full text-sm gap-2 text-red-600 border-red-200 hover:bg-red-50 h-11"
                 onClick={handleCancel}
               >
                 <XCircle className="w-4 h-4" /> Cancel Order
@@ -423,13 +425,13 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
             )}
             <Button
               variant="outline"
-              className="w-full text-sm gap-2"
+              className="w-full text-sm gap-2 h-11"
               onClick={() => downloadInvoice(order)}
             >
               <Download className="w-4 h-4" /> Download Invoice
             </Button>
             <Link href={`/customer/help?order=${order.id}`} className="block">
-              <Button variant="ghost" className="w-full text-sm text-gray-600">
+              <Button variant="ghost" className="w-full text-sm text-gray-600 h-11">
                 Contact Support
               </Button>
             </Link>

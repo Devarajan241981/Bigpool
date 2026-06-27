@@ -19,12 +19,12 @@ export default function WishlistPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center pb-20 md:pb-16">
         <Heart className="w-16 h-16 text-gray-200 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Your wishlist is empty</h2>
         <p className="text-gray-500 mb-6">Save items you love by clicking the heart icon on products</p>
         <Link href="/customer/products">
-          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold">
+          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold h-11 px-8">
             Discover Products
           </Button>
         </Link>
@@ -33,10 +33,10 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex items-center gap-2 mb-6">
+    <div className="max-w-5xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
         <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-        <h1 className="text-2xl font-bold text-gray-900">My Wishlist</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Wishlist</h1>
         <Badge className="bg-red-100 text-red-700">{items.length}</Badge>
       </div>
 

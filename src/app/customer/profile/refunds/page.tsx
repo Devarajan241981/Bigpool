@@ -381,15 +381,15 @@ export default function RefundsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <div className="flex items-center gap-2">
           <RotateCcw className="w-5 h-5 text-[#0d9488]" />
-          <h1 className="text-2xl font-bold text-gray-900">Returns & Refunds</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Returns & Refunds</h1>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Button onClick={() => setDialogOpen(true)} className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold gap-2">
-            <Plus className="w-4 h-4" /> New Request
+          <Button onClick={() => setDialogOpen(true)} className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold gap-1.5 h-10 text-sm">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">New </span>Request
           </Button>
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>Request Return / Refund</DialogTitle></DialogHeader>

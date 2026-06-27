@@ -95,10 +95,10 @@ function OrdersContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="flex items-center gap-2 mb-6">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6">
+      <div className="flex items-center gap-2 mb-4 md:mb-6">
         <Package className="w-5 h-5 text-[#0d9488]" />
-        <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">My Orders</h1>
         <Badge className="bg-gray-100 text-gray-700">{myOrders.length}</Badge>
       </div>
 
@@ -106,7 +106,7 @@ function OrdersContent() {
         <div className="text-center py-16 bg-white rounded-xl border">
           <p className="text-5xl mb-4">📦</p>
           <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-          <Link href="/customer/products"><Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white">Start Shopping</Button></Link>
+          <Link href="/customer/products"><Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white h-11">Start Shopping</Button></Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -116,34 +116,31 @@ function OrdersContent() {
               className="bg-white rounded-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-md hover:border-gray-300 transition-all"
               onClick={() => router.push(`/customer/profile/orders/${order.id}`)}
             >
-              {/* Card header — clicking here also navigates */}
-              <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div>
-                    <span className="text-xs text-gray-500">Order ID</span>
-                    <p className="font-semibold text-gray-800">{order.id}</p>
+              {/* Card header — mobile stacked, desktop row */}
+              <div className="px-4 md:px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500">Order ID</p>
+                    <p className="font-semibold text-gray-800 text-sm truncate">{order.id}</p>
                   </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Placed on</span>
-                    <p className="font-medium">{order.createdAt}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500">Total</span>
-                    <p className="font-semibold">₹{order.total.toLocaleString()}</p>
-                  </div>
+                  <Badge className={`capitalize text-xs flex-shrink-0 ${statusColor[order.status] || "bg-gray-100 text-gray-700"}`}>
+                    {order.status.replace(/_/g, " ")}
+                  </Badge>
                 </div>
-                <Badge className={`capitalize text-xs ${statusColor[order.status] || "bg-gray-100 text-gray-700"}`}>
-                  {order.status.replace(/_/g, " ")}
-                </Badge>
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                  <span>{order.createdAt}</span>
+                  <span className="text-gray-300">·</span>
+                  <span className="font-semibold text-gray-800">₹{order.total.toLocaleString()}</span>
+                </div>
               </div>
 
-              <div className="p-5">
+              <div className="p-4 md:p-5">
                 {order.items.map(({ product, quantity }) => (
-                  <div key={product.id} className="flex items-center gap-4 mb-3">
+                  <div key={product.id} className="flex items-center gap-3 mb-3">
                     <img
                       src={product.images[0]}
                       alt={product.name}
-                      className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                      className="w-14 h-14 md:w-16 md:h-16 object-cover rounded-lg flex-shrink-0"
                       onClick={(e) => { e.stopPropagation(); router.push(`/customer/products/${product.id}`); }}
                     />
                     <div className="flex-1 min-w-0">
@@ -158,28 +155,28 @@ function OrdersContent() {
                   </div>
                 ))}
 
-                <div className="flex items-center gap-2 text-xs text-gray-500 mt-3 mb-4">
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>Deliver to: {order.address.street}, {order.address.city} - {order.address.pincode}</span>
+                <div className="flex items-start gap-2 text-xs text-gray-500 mt-2 mb-3">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">Deliver to: {order.address.street}, {order.address.city} - {order.address.pincode}</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-xs gap-1.5"
+                    className="text-xs gap-1.5 h-9"
                     onClick={() => router.push(`/customer/profile/orders/${order.id}`)}
                   >
                     {order.status === "cancelled"
-                      ? <><Eye className="w-3.5 h-3.5" /> View Details <ChevronRight className="w-3 h-3" /></>
-                      : <><Truck className="w-3.5 h-3.5" /> Track Order <ChevronRight className="w-3 h-3" /></>
+                      ? <><Eye className="w-3.5 h-3.5" /> View Details</>
+                      : <><Truck className="w-3.5 h-3.5" /> Track Order</>
                     }
                   </Button>
                   {order.status === "delivered" && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs text-orange-600 border-orange-200 hover:bg-orange-50"
+                      className="text-xs text-orange-600 border-orange-200 hover:bg-orange-50 h-9"
                       onClick={() => router.push("/customer/profile/refunds")}
                     >
                       Return / Refund
@@ -189,17 +186,17 @@ function OrdersContent() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs text-[#0d9488] border-teal-200 hover:bg-teal-50"
+                      className="text-xs text-[#0d9488] border-teal-200 hover:bg-teal-50 h-9"
                       onClick={() => router.push("/customer/profile/refunds")}
                     >
-                      View Refund →
+                      View Refund
                     </Button>
                   )}
                   {["placed", "confirmed", "packed", "shipped"].includes(order.status) && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-xs gap-1 text-red-600 border-red-200 hover:bg-red-50"
+                      className="text-xs gap-1 text-red-600 border-red-200 hover:bg-red-50 h-9"
                       onClick={() => handleCancel(order.id, order.status)}
                     >
                       <XCircle className="w-3 h-3" /> Cancel
@@ -216,11 +213,11 @@ function OrdersContent() {
                         key={product.id}
                         size="sm"
                         variant="ghost"
-                        className="text-xs gap-1 text-amber-600 hover:bg-amber-50 border border-amber-200 h-7 px-2"
+                        className="text-xs gap-1 text-amber-600 hover:bg-amber-50 border border-amber-200 h-8 px-2"
                         onClick={() => router.push(`/customer/products/${product.id}?tab=reviews`)}
                       >
                         <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        {product.name.length > 22 ? product.name.slice(0, 22) + "…" : product.name}
+                        {product.name.length > 20 ? product.name.slice(0, 20) + "…" : product.name}
                       </Button>
                     ))}
                   </div>

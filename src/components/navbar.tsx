@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCartStore, useAuthStore, useNotificationStore, useWishlistStore, useWalletStore, useProductStore, useRecentlyViewedStore, useHasHydrated } from "@/lib/store";
 import { categories } from "@/lib/mock-data";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -74,9 +75,9 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex items-center gap-3">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <div className="text-2xl font-extrabold tracking-tight">
-              <span className="text-white">Big</span>
-              <span className="text-[#0d9488]">pool</span>
+            <div className="text-xl md:text-2xl font-extrabold tracking-tight select-none">
+              <span className="text-white logo-big">Big</span>
+              <span className="text-[#0d9488] logo-pool relative">pool</span>
             </div>
           </Link>
 
@@ -311,6 +312,9 @@ export default function Navbar() {
                 <span className="hidden sm:block text-sm font-bold">Cart</span>
               </button>
             </Link>
+
+            {/* Theme toggle */}
+            <ThemeToggle />
 
             {/* Mobile menu toggle */}
             <button

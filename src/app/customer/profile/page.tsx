@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   User, Package, Heart, RotateCcw, Bell, Settings,
-  LogOut, ChevronRight, Edit3, MapPin, Phone, Mail, Camera,
+  LogOut, ChevronRight, Edit3, MapPin, Phone, Mail, Camera, Smartphone, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +42,11 @@ export default function ProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+      <div className="max-w-7xl mx-auto px-4 py-16 text-center pb-20 md:pb-16">
         <p className="text-5xl mb-4">👤</p>
         <h2 className="text-xl font-semibold mb-2">Please sign in to view your profile</h2>
         <Link href="/customer/login">
-          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold mt-4">Sign In</Button>
+          <Button className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold mt-4 h-11 px-8">Sign In</Button>
         </Link>
       </div>
     );
@@ -71,10 +71,55 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 py-4 pb-20 md:pb-6">
+      {/* Mobile hero card */}
+      <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] rounded-2xl p-5 text-white mb-4 md:hidden">
+        <div className="flex items-center gap-4">
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 rounded-full bg-[#0d9488] flex items-center justify-center text-white font-bold text-2xl">
+              {user?.name?.[0] || "U"}
+            </div>
+            <button className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow">
+              <Camera className="w-3 h-3 text-gray-600" />
+            </button>
+          </div>
+          <div className="min-w-0">
+            <p className="font-bold text-lg leading-tight">{user?.name}</p>
+            <p className="text-xs text-gray-300 truncate">{user?.email}</p>
+            <Badge className="mt-1.5 bg-[#0d9488] text-white text-xs capitalize">{user?.role}</Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile quick nav grid */}
+      <div className="grid grid-cols-3 gap-2 mb-4 md:hidden">
+        {[
+          { href: "/customer/profile/orders", icon: Package, label: "Orders", color: "text-blue-600 bg-blue-50" },
+          { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", color: "text-red-600 bg-red-50" },
+          { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
+          { href: "/customer/profile/notifications", icon: Bell, label: "Alerts", color: "text-teal-600 bg-teal-50" },
+          { href: "/customer/profile/settings", icon: Settings, label: "Settings", color: "text-gray-600 bg-gray-100" },
+        ].map((item) => (
+          <Link key={item.href} href={item.href}>
+            <div className="bg-white border border-gray-200 rounded-xl p-3 text-center hover:shadow-sm transition-shadow active:scale-95">
+              <div className={`rounded-lg p-2 inline-flex mb-1.5 ${item.color}`}>
+                <item.icon className="w-4 h-4" />
+              </div>
+              <p className="text-[11px] font-medium text-gray-700">{item.label}</p>
+            </div>
+          </Link>
+        ))}
+        <button onClick={handleLogout} className="bg-white border border-red-100 rounded-xl p-3 text-center hover:bg-red-50 active:scale-95 transition-all">
+          <div className="rounded-lg p-2 inline-flex mb-1.5 text-red-600 bg-red-50">
+            <LogOut className="w-4 h-4" />
+          </div>
+          <p className="text-[11px] font-medium text-red-600">Sign Out</p>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Sidebar */}
-        <div className="md:col-span-1">
+        {/* Sidebar — desktop only */}
+        <div className="hidden md:block md:col-span-1">
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] p-6 text-white text-center">
               <div className="relative inline-block">
@@ -116,16 +161,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Main Content */}
-        <div className="md:col-span-3 space-y-6">
+        <div className="md:col-span-3 space-y-4 md:space-y-6">
           {/* Profile Card */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-900">Personal Information</h2>
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+            <div className="flex items-center justify-between mb-4 md:mb-5">
+              <h2 className="text-base md:text-lg font-bold text-gray-900">Personal Information</h2>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setEditing(!editing)}
-                className="gap-2"
+                className="gap-2 h-9"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 {editing ? "Cancel" : "Edit"}
@@ -136,36 +181,36 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Full Name</Label>
-                  <Input className="mt-1.5" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div>
                   <Label>Phone</Label>
-                  <Input className="mt-1.5" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
                 <div className="sm:col-span-2">
                   <Label>Street Address</Label>
-                  <Input className="mt-1.5" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
                 </div>
                 <div>
                   <Label>City</Label>
-                  <Input className="mt-1.5" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
                 </div>
                 <div>
                   <Label>State</Label>
-                  <Input className="mt-1.5" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
                 </div>
                 <div>
                   <Label>Pincode</Label>
-                  <Input className="mt-1.5" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
+                  <Input className="mt-1.5 h-11" value={form.pincode} onChange={(e) => setForm({ ...form, pincode: e.target.value })} />
                 </div>
                 <div className="sm:col-span-2">
-                  <Button onClick={handleSave} className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold">
+                  <Button onClick={handleSave} className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11">
                     Save Changes
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { icon: <User className="w-4 h-4" />, label: "Name", value: user?.name },
                   { icon: <Mail className="w-4 h-4" />, label: "Email", value: user?.email },
@@ -173,10 +218,10 @@ export default function ProfilePage() {
                   { icon: <MapPin className="w-4 h-4" />, label: "Address", value: user?.address ? `${user.address.street}, ${user.address.city}` : "Not added" },
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-400 mt-0.5">{item.icon}</span>
-                    <div>
+                    <span className="text-gray-400 mt-0.5 flex-shrink-0">{item.icon}</span>
+                    <div className="min-w-0">
                       <p className="text-xs text-gray-500">{item.label}</p>
-                      <p className="text-sm font-medium text-gray-800">{item.value}</p>
+                      <p className="text-sm font-medium text-gray-800 break-words">{item.value}</p>
                     </div>
                   </div>
                 ))}
@@ -185,38 +230,42 @@ export default function ProfilePage() {
           </div>
 
           {/* Recent Orders */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
+              <h2 className="text-base md:text-lg font-bold text-gray-900">Recent Orders</h2>
               <Link href="/customer/profile/orders" className="text-sm text-[#0d9488] hover:underline">View all</Link>
             </div>
-            <div className="space-y-3">
-              {recentOrders.map((order) => (
-                <Link key={order.id} href={`/customer/profile/orders/${order.id}`}>
-                  <div className="flex items-center gap-4 p-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-colors">
-                    <img
-                      src={order.items[0]?.product.images[0]}
-                      alt=""
-                      className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">Order #{order.id}</p>
-                      <p className="text-xs text-gray-500">{order.items.length} item(s) · ₹{order.total.toLocaleString()}</p>
-                      <p className="text-xs text-gray-400">{order.createdAt}</p>
+            {recentOrders.length === 0 ? (
+              <p className="text-sm text-gray-500 py-4 text-center">No orders yet. <Link href="/customer/products" className="text-[#0d9488] hover:underline">Start shopping</Link></p>
+            ) : (
+              <div className="space-y-3">
+                {recentOrders.map((order) => (
+                  <Link key={order.id} href={`/customer/profile/orders/${order.id}`}>
+                    <div className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:border-gray-300 transition-colors">
+                      <img
+                        src={order.items[0]?.product.images[0]}
+                        alt=""
+                        className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">Order #{order.id}</p>
+                        <p className="text-xs text-gray-500">{order.items.length} item(s) · ₹{order.total.toLocaleString()}</p>
+                        <p className="text-xs text-gray-400">{order.createdAt}</p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Badge className={`text-xs capitalize ${
+                          order.status === "delivered" ? "bg-green-100 text-green-700" :
+                          order.status === "shipped" ? "bg-blue-100 text-blue-700" :
+                          "bg-orange-100 text-orange-700"
+                        }`}>
+                          {order.status.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
                     </div>
-                    <div>
-                      <Badge className={`text-xs capitalize ${
-                        order.status === "delivered" ? "bg-green-100 text-green-700" :
-                        order.status === "shipped" ? "bg-blue-100 text-blue-700" :
-                        "bg-orange-100 text-orange-700"
-                      }`}>
-                        {order.status.replace(/_/g, " ")}
-                      </Badge>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}
@@ -224,8 +273,8 @@ export default function ProfilePage() {
             {[
               { href: "/customer/profile/orders", icon: Package, label: "My Orders", color: "text-blue-600 bg-blue-50" },
               { href: "/customer/profile/wishlist", icon: Heart, label: "Wishlist", color: "text-red-600 bg-red-50" },
+              { href: "/customer/profile/wallet", icon: Wallet, label: "Wallet", color: "text-green-600 bg-green-50" },
               { href: "/customer/profile/refunds", icon: RotateCcw, label: "Refunds", color: "text-purple-600 bg-purple-50" },
-              { href: "/customer/profile/notifications", icon: Bell, label: "Alerts", color: "text-teal-600 bg-teal-50" },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
                 <div className="bg-white border border-gray-200 rounded-xl p-4 text-center hover:shadow-md transition-shadow">
@@ -236,6 +285,29 @@ export default function ProfilePage() {
                 </div>
               </Link>
             ))}
+          </div>
+
+          {/* Download App card */}
+          <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] rounded-xl p-5 text-white flex items-center gap-4">
+            <div className="bg-[#0d9488] rounded-xl p-3 flex-shrink-0">
+              <Smartphone className="w-6 h-6" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm">Install the Bigpool App</p>
+              <p className="text-xs text-gray-300 mt-0.5">Faster access · App-only deals · Works offline</p>
+            </div>
+            <button
+              onClick={() => {
+                if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+                  alert("In Safari: tap Share → Add to Home Screen");
+                } else {
+                  window.dispatchEvent(new CustomEvent("triggerInstall"));
+                }
+              }}
+              className="flex-shrink-0 bg-[#0d9488] hover:bg-[#0f766e] text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
+            >
+              Install
+            </button>
           </div>
         </div>
       </div>

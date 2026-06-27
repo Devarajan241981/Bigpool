@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Smartphone, Download } from "lucide-react";
 
 const LinkedInIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
@@ -22,8 +23,42 @@ export default function Footer() {
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="text-white text-sm hover:text-[#0d9488] transition-colors"
         >
-          Back to top
+          Back to top ↑
         </button>
+      </div>
+
+      {/* Download App Banner */}
+      <div className="bg-gradient-to-r from-[#0d9488] to-[#0f766e] py-5">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-white">
+            <div className="bg-white/20 rounded-xl p-2.5">
+              <Smartphone className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="font-bold text-base">Get the Bigpool App</p>
+              <p className="text-teal-100 text-xs">Faster checkout · App-only deals · Offline access</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                const e = new CustomEvent("triggerInstall");
+                window.dispatchEvent(e);
+                if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
+                  alert("Tap the Share button in Safari, then select 'Add to Home Screen' to install Bigpool.");
+                }
+              }}
+              className="flex items-center gap-2 bg-white text-[#0d9488] font-bold text-sm px-4 py-2.5 rounded-xl hover:bg-teal-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Install App
+            </button>
+            <div className="flex flex-col items-center justify-center text-teal-100 text-[10px] leading-tight text-center">
+              <span>Works on</span>
+              <span className="font-semibold">Android & iOS</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -94,7 +129,7 @@ export default function Footer() {
             <Link href="#" className="text-sm hover:text-[#0d9488]">YouTube</Link>
           </div>
           <div className="text-xs text-center">
-            © 2024 Bigpool. All rights reserved. |{" "}
+            © 2025 Bigpool. All rights reserved. |{" "}
             <Link href="#" className="hover:text-[#0d9488]">Privacy Policy</Link> |{" "}
             <Link href="/terms" className="hover:text-[#0d9488]">Terms of Use</Link>
           </div>

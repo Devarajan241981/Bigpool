@@ -38,8 +38,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+    <div className="max-w-2xl mx-auto px-4 py-4 md:py-6 pb-20 md:pb-6 space-y-4 md:space-y-6">
+      <h1 className="text-xl md:text-2xl font-bold text-gray-900">Settings</h1>
 
       {/* Password */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -70,7 +70,7 @@ export default function SettingsPage() {
             <Label>Confirm New Password</Label>
             <Input type="password" placeholder="Repeat new password" />
           </div>
-          <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold">
+          <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11">
             Update Password
           </Button>
         </form>
@@ -106,7 +106,7 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
-        <Button className="mt-4 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold" onClick={() => toast.success("Preferences saved!")}>
+        <Button className="mt-4 bg-[#0d9488] hover:bg-[#0f766e] text-white font-semibold w-full sm:w-auto h-11" onClick={() => toast.success("Preferences saved!")}>
           Save Preferences
         </Button>
       </div>
@@ -130,7 +130,7 @@ export default function SettingsPage() {
           <Globe className="w-5 h-5 text-[#0d9488]" />
           <h2 className="font-semibold text-gray-900">Language & Region</h2>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label>Language</Label>
             <select className="w-full mt-1.5 h-10 px-3 rounded-md border border-input bg-background text-sm">
