@@ -1,34 +1,32 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAuthStore } from "@/lib/store";
+import { useAuthStore, useHasHydrated } from "@/lib/store";
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, accessToken, setAccessToken, logout } = useAuthStore();
+  const hasHydrated = useHasHydrated();
 
   useEffect(() => {
-    // If user is marked authenticated (from localStorage) but no access token in memory
-    // → try to get a new access token using the httpOnly refresh token cookie
-    if (isAuthenticated && !accessToken) {
-      fetch("/api/auth/refresh", { method: "POST", credentials: "include" })
-        .then((res) => {
-          if (!res.ok) {
-            // Refresh token is invalid/revoked/expired → force logout on this device
-            logout();
-            return;
-          }
-          return res.json();
-        })
-        .then((data) => {
-          if (data?.accessToken) {
-            setAccessToken(data.accessToken);
-          }
-        })
-        .catch(() => {
-          logout();
-        });
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Wait until Zustand has hydrated from localStorage before checking auth
+    // state. Without this, isAuthenticated reads as false (initial value) and
+    // the refresh is skipped — leaving accessToken null forever.
+    if (!hasHydrated) return;
+    if (!isAuthenticated || accessToken) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((data) => { if (data?.accessToken) setAccessToken(data.accessToken); })
+      .catch(() => logout())
+      .finally(() => clearTimeout(timeout));
+  }, [hasHydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <>{children}</>;
 }
