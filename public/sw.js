@@ -1,4 +1,4 @@
-const CACHE = "bigpool-v2";
+const CACHE = "bigpool-v3";
 
 const STATIC = ["/", "/customer/products", "/customer/cart"];
 
