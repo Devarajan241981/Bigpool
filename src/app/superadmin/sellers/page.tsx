@@ -24,11 +24,13 @@ export default function SuperAdminSellersPage() {
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [sellers, setSellers] = useState<Seller[]>([]);
+  const [apiApps, setApiApps] = useState<SellerApplication[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [selectedApp, setSelectedApp] = useState<SellerApplication | null>(null);
-  const { applications, updateStatus: updateAppStatus } = useSellerApplicationStore();
+  const { updateStatus: updateAppStatus } = useSellerApplicationStore();
+
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
   }, [hasHydrated, isAuthenticated, user, router]);
@@ -38,6 +40,10 @@ export default function SuperAdminSellersPage() {
       fetch("/api/sellers")
         .then((r) => r.ok ? r.json() : [])
         .then(setSellers)
+        .catch(() => {});
+      fetch("/api/vendor-applications")
+        .then((r) => r.ok ? r.json() : [])
+        .then(setApiApps)
         .catch(() => {});
     }
   }, [hasHydrated, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,14 +62,22 @@ export default function SuperAdminSellersPage() {
   };
 
   const updateApplicationStatus = (id: string, status: "approved" | "rejected") => {
+    // Update server
+    fetch("/api/vendor-applications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    }).catch(() => {});
+    // Update local Zustand store too (for same-browser customer status page)
     updateAppStatus(id, status);
+    setApiApps((prev) => prev.map((a) => a.id === id ? { ...a, status } : a));
     setSelectedApp(null);
     toast.success(`Application ${status === "approved" ? "approved — vendor can now log in" : "rejected"}.`);
   };
 
   const allEntries: DisplayEntry[] = [
     ...sellers.map((s): DisplayEntry => ({ type: "seller", data: s })),
-    ...applications.map((a): DisplayEntry => ({ type: "application", data: a })),
+    ...apiApps.map((a): DisplayEntry => ({ type: "application", data: a })),
   ];
 
   const filtered = allEntries.filter((entry) => {

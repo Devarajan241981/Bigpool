@@ -68,7 +68,7 @@ export default function VendorLoginPage() {
             <div>
               <div className="flex justify-between items-center">
                 <Label>Password</Label>
-                <Link href="#" className="text-xs text-[#0d9488] hover:underline">Forgot password?</Link>
+                <Link href="/customer/forgot-password" className="text-xs text-[#0d9488] hover:underline">Forgot password?</Link>
               </div>
               <div className="relative mt-1.5">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

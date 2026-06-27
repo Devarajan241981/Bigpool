@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getDb } from "@/lib/supabase";
+import { findUser } from "@/lib/server-store";
 
 // Demo accounts — used only when Supabase is not configured
 const DEMO_ACCOUNTS = [
@@ -39,6 +40,14 @@ export async function POST(request: NextRequest) {
   const db = getDb();
 
   if (!db) {
+    // Check real registered users first
+    const serverUser = findUser(normalizedEmail);
+    if (serverUser && serverUser.password === password) {
+      const { password: _, ...safe } = serverUser;
+      return Response.json({
+        user: { ...safe, avatar: undefined, address: undefined },
+      });
+    }
     // Fallback: check demo accounts
     const demo = DEMO_ACCOUNTS.find(
       (a) => a.email === normalizedEmail && a.password === password

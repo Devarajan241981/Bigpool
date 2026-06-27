@@ -23,8 +23,19 @@ export default function CustomerSignupPage() {
     if (form.password !== form.confirm) { toast.error("Passwords do not match"); return; }
     if (!agreed) { toast.error("Please accept the terms"); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
-    login({ id: `c_${Date.now()}`, name: form.name, email: form.email, phone: form.phone, role: "customer", createdAt: new Date().toISOString() });
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, email: form.email, phone: form.phone, password: form.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Registration failed"); setLoading(false); return; }
+      login(data.user);
+    } catch {
+      // Fallback: still log in locally if API unreachable
+      login({ id: `c_${Date.now()}`, name: form.name, email: form.email, phone: form.phone, role: "customer", createdAt: new Date().toISOString() });
+    }
     toast.success("Welcome to Bigpool! Happy Shopping 🎉");
     router.push("/");
     setLoading(false);

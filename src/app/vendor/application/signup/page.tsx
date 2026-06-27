@@ -117,8 +117,7 @@ export default function VendorApplicationPage() {
   const update = (k: string, v: string) => setForm({ ...form, [k]: v });
 
   const handleSubmit = async () => {
-    setSubmitted(true);
-    submit({
+    const payload = {
       name: form.name,
       email: form.email,
       phone: form.phone,
@@ -130,7 +129,16 @@ export default function VendorApplicationPage() {
       bankAccount: form.bankAccount,
       ifsc: form.ifsc,
       fromCustomer: isAuthenticated && user?.role === "customer",
-    });
+    };
+    // Save to local store (for same-browser status tracking)
+    submit(payload);
+    // Also POST to server so admin can see it from any browser
+    fetch("/api/vendor-applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+    setSubmitted(true);
     toast.success("Application submitted! Admin will review within 2-3 business days.");
   };
 
