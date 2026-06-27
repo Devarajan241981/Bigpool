@@ -139,16 +139,59 @@ export default function CheckoutPage() {
     router.push("/customer/profile/orders?success=true");
   };
 
-  const openRazorpay = () => {
+  const openRazorpay = async () => {
     const key = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     if (!key) { toast.error("Razorpay key not configured."); return; }
     setPlacing(true);
+
+    // Create order server-side first so we can verify signature after payment
+    let rzpOrderId: string;
+    try {
+      const res = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: finalTotal }),
+      });
+      if (!res.ok) throw new Error("Order creation failed");
+      const rzpOrder = await res.json();
+      rzpOrderId = rzpOrder.id;
+    } catch {
+      setPlacing(false);
+      toast.error("Could not initiate payment. Please try again.");
+      return;
+    }
+
     const options = {
-      key, amount: finalTotal * 100, currency: "INR", name: "Bigpool",
+      key,
+      amount: finalTotal * 100,
+      currency: "INR",
+      order_id: rzpOrderId,
+      name: "Bigpool",
       description: `Order — ${items.length} item(s)`,
-      handler: () => { completeOrder(); },
-      prefill: { name: user?.name ?? "", email: user?.email ?? "", contact: activeAddress.phone,
-        ...(paymentMethod === "upi" && upiId ? { vpa: upiId } : {}) },
+      handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+        // Verify payment signature server-side before completing order
+        const verify = await fetch("/api/checkout/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          }),
+        });
+        if (!verify.ok) {
+          setPlacing(false);
+          toast.error("Payment verification failed. Contact support.");
+          return;
+        }
+        completeOrder();
+      },
+      prefill: {
+        name: user?.name ?? "",
+        email: user?.email ?? "",
+        contact: activeAddress.phone,
+        ...(paymentMethod === "upi" && upiId ? { vpa: upiId } : {}),
+      },
       notes: { address: `${activeAddress.street}, ${activeAddress.city}` },
       theme: { color: "#0d9488" },
       modal: { ondismiss: () => setPlacing(false) },

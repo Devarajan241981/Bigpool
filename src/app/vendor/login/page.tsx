@@ -28,10 +28,11 @@ export default function VendorLoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Invalid credentials"); return; }
-      if (data.user.role !== "seller") { toast.error("This portal is for vendors only."); return; }
+      if (data.user.role !== "seller" && data.user.role !== "admin") { toast.error("This portal is for vendors only."); return; }
       login(data.user, data.accessToken ?? "");
       toast.success(`Welcome back, ${data.user.name}!`);
-      router.push("/vendor/dashboard");
+      const dest = data.user.role === "admin" ? "/superadmin/dashboard" : "/vendor/dashboard";
+      router.push(dest);
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
