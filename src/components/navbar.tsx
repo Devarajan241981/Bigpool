@@ -18,6 +18,7 @@ import {
 import { useCartStore, useAuthStore, useNotificationStore, useWishlistStore, useWalletStore, useProductStore, useRecentlyViewedStore, useHasHydrated } from "@/lib/store";
 import { categories } from "@/lib/mock-data";
 import ThemeToggle from "@/components/theme-toggle";
+import MusicPlayer from "@/components/music-player";
 
 export default function Navbar() {
   const router = useRouter();
@@ -343,6 +344,9 @@ export default function Navbar() {
                 <span className="text-sm font-bold">Cart</span>
               </button>
             </Link>
+
+            {/* Music toggle */}
+            <MusicPlayer />
 
             {/* Theme toggle */}
             <ThemeToggle />

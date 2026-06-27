@@ -13,7 +13,6 @@ import SplashScreen from "@/components/splash-screen";
 import { Toaster } from "@/components/ui/sonner";
 import ErrorBoundary from "@/components/error-boundary";
 import AuthProvider from "@/components/auth-provider";
-import MusicPlayer from "@/components/music-player";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -154,7 +153,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <MobileBottomNav />
         <InstallPrompt />
-        <MusicPlayer />
         <ChatSupport />
         <Toaster richColors position="bottom-right" />
         </AuthProvider>

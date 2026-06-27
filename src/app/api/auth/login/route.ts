@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/supabase";
 import { findUser } from "@/lib/server-store";
 import { signAccessToken, signRefreshToken } from "@/lib/jwt";
+
+// In-memory rate limiter: max 10 attempts per IP per 15 min
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 10;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= MAX_ATTEMPTS) return false;
+  entry.count++;
+  return true;
+}
 
 function tokenId() {
   return `rt_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -43,12 +61,16 @@ function buildResponse(user: {
 }
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json({ error: "Too many login attempts. Try again in 15 minutes." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const { email, password } = body;
   if (!email || !password || typeof email !== "string" || typeof password !== "string") {
     return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
-  // Prevent excessively long inputs from being processed
   if (email.length > 254 || password.length > 128) {
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
@@ -75,8 +97,24 @@ export async function POST(request: NextRequest) {
       .eq("email", normalizedEmail)
       .single();
 
-    if (!profile || profile.password !== password) {
+    if (!profile) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    // Support bcrypt hashes and plain-text legacy passwords (auto-upgrade on match)
+    const isHashed = profile.password?.startsWith("$2");
+    const passwordOk = isHashed
+      ? await bcrypt.compare(password, profile.password)
+      : profile.password === password;
+
+    if (!passwordOk) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    // Upgrade plain-text password to bcrypt hash transparently
+    if (!isHashed) {
+      const hashed = await bcrypt.hash(password, 12);
+      db.from("users").update({ password: hashed }).eq("id", profile.id).then(() => {});
     }
 
     return buildResponse({
@@ -93,7 +131,14 @@ export async function POST(request: NextRequest) {
 
   // In-memory fallback
   const serverUser = findUser(normalizedEmail);
-  if (!serverUser || serverUser.password !== password) {
+  if (!serverUser) {
+    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+  }
+  const memHashed = serverUser.password?.startsWith("$2");
+  const memOk = memHashed
+    ? await bcrypt.compare(password, serverUser.password)
+    : serverUser.password === password;
+  if (!memOk) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
   const { password: _, ...safe } = serverUser;

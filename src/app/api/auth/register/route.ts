@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/supabase";
 import { serverUsers, findUser } from "@/lib/server-store";
 
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       id: `u_${Date.now()}`,
       name,
       email: normalizedEmail,
-      password,
+      password: await bcrypt.hash(password, 12),
       phone: phone ?? "",
       role: "customer",
     };
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     id: `u_${Date.now()}`,
     name,
     email: normalizedEmail,
-    password,
+    password: await bcrypt.hash(password, 12),
     phone: phone ?? "",
     role: "customer" as const,
     createdAt: new Date().toISOString(),
