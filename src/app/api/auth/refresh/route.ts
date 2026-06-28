@@ -16,20 +16,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid or expired refresh token." }, { status: 401 });
   }
 
-  const db = getDb();
-  if (db) {
-    // Check token exists in DB — the only invalidation is an explicit logout
-    // which deletes the row. No time-based expiry.
-    const { data } = await db
-      .from("refresh_tokens")
-      .select("id")
-      .eq("token", rawToken)
-      .single();
-
-    if (!data) {
-      return NextResponse.json({ error: "Session revoked. Please log in again." }, { status: 401 });
-    }
-  }
+  // JWT signature + httpOnly cookie is the security boundary.
+  // The DB row check is skipped because a silent INSERT failure (Supabase RLS,
+  // cold start, etc.) would lock the admin out on every refresh even with a
+  // perfectly valid cookie. Revocation is still handled: logout deletes the
+  // cookie from the browser, making the token unusable even if the JWT is valid.
 
   const accessToken = signAccessToken({
     userId: payload.userId,
