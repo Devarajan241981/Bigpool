@@ -18,7 +18,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
     // Authenticated but no token in memory (page refresh) — try the cookie
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 3000);
 
     fetch("/api/auth/refresh", {
       method: "POST",

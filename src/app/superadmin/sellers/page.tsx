@@ -22,7 +22,7 @@ type DisplayEntry =
   | { type: "application"; data: SellerApplication };
 
 export default function SuperAdminSellersPage() {
-  const { user, isAuthenticated, accessToken, sessionReady } = useAuthStore();
+  const { user, isAuthenticated, accessToken } = useAuthStore();
   const hasHydrated = useHasHydrated();
   const router = useRouter();
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -30,6 +30,7 @@ export default function SuperAdminSellersPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [refreshing, setRefreshing] = useState(false);
+  const [tokenLoading, setTokenLoading] = useState(true);
   const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
   const [selectedApp, setSelectedApp] = useState<SellerApplication | null>(null);
   const [appBankDetails, setAppBankDetails] = useState<Record<string, string> | null>(null);
@@ -39,11 +40,7 @@ export default function SuperAdminSellersPage() {
 
   useEffect(() => {
     if (hasHydrated && (!isAuthenticated || user?.role !== "admin")) router.push("/superadmin/login");
-    // If session restore finished but no token — cookie expired, send to login
-    if (hasHydrated && sessionReady && !accessToken && isAuthenticated && user?.role === "admin") {
-      router.push("/superadmin/login");
-    }
-  }, [hasHydrated, sessionReady, isAuthenticated, accessToken, user, router]);
+  }, [hasHydrated, isAuthenticated, user, router]);
 
   const fetchData = async () => {
     const h = getAuthHeaders();
@@ -61,17 +58,21 @@ export default function SuperAdminSellersPage() {
     setRefreshing(false);
   };
 
+  // Fetch as soon as we have an access token (set by AuthProvider after cookie refresh)
   useEffect(() => {
-    // Wait until AuthProvider has finished the refresh attempt (sessionReady)
-    // so we always fetch with a valid token, not a null one.
-    if (hasHydrated && sessionReady && isAuthenticated && user?.role === "admin") {
+    if (hasHydrated && isAuthenticated && user?.role === "admin" && accessToken) {
+      setTokenLoading(false);
       fetchData();
     }
-  }, [hasHydrated, sessionReady, isAuthenticated, user?.role]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [hasHydrated, isAuthenticated, user?.role, accessToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Give up waiting after 5 seconds — show empty state so admin can log in again
+  useEffect(() => {
+    const t = setTimeout(() => setTokenLoading(false), 5000);
+    return () => clearTimeout(t);
+  }, []);
 
   if (!hasHydrated || !isAuthenticated || user?.role !== "admin") return null;
-
-  const tokenLoading = !sessionReady;
 
   const updateSellerStatus = (sellerId: string, status: "approved" | "rejected") => {
     fetch(`/api/sellers/${sellerId}`, {
