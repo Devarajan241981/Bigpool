@@ -78,9 +78,36 @@ export default function ProfilePage() {
     pincode: user?.address?.pincode || "",
   });
 
-  // Wait for store hydration so we don't flash the sign-in screen during
-  // pull-to-refresh or hard reload while the user IS logged in
-  if (!hasHydrated) return null;
+  // Show skeleton during the brief Zustand hydration window so pull-to-refresh
+  // never flashes a dark/blank screen or the sign-in prompt.
+  if (!hasHydrated) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-4 pb-20">
+        {/* Hero card skeleton */}
+        <div className="bg-gradient-to-r from-[#1e293b] to-[#334155] rounded-2xl p-5 mb-4 md:hidden">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-white/20 flex-shrink-0 animate-pulse" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-white/20 rounded w-3/4 animate-pulse" />
+              <div className="h-3 bg-white/20 rounded w-1/2 animate-pulse" />
+            </div>
+          </div>
+        </div>
+        {/* Nav list skeleton */}
+        <div className="mb-4 md:hidden bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className={`flex items-center gap-3 px-4 py-3.5 ${i < 7 ? "border-b border-gray-100" : ""}`}>
+              <div className="w-9 h-9 rounded-xl bg-gray-200 animate-pulse flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 bg-gray-200 animate-pulse rounded w-2/5" />
+                <div className="h-3 bg-gray-100 animate-pulse rounded w-3/5" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

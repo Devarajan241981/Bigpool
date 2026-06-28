@@ -44,7 +44,7 @@ export default function VendorProductsPage() {
   }, []);
   if (!hasHydrated || !isAuthenticated || user?.role !== "seller") return null;
 
-  const sellerProducts = products.filter((p) => p.sellerId === user?.id || p.sellerId === "s1").filter((p) =>
+  const sellerProducts = products.filter((p) => p.sellerId === user?.id).filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -69,7 +69,7 @@ export default function VendorProductsPage() {
       images: newProduct.images.length > 0 ? newProduct.images : ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format"],
       category: newProduct.category,
       categoryId: categories.find((c) => c.name === newProduct.category)?.id || newProduct.category.toLowerCase().replace(/\s+/g, "-"),
-      sellerId: user?.id || "s1",
+      sellerId: user!.id,
       sellerName: user?.name || "Vendor",
       stock: parseInt(newProduct.stock) || 0,
       tags: newProduct.tags.split(",").map((t) => t.trim()).filter(Boolean),

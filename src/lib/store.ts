@@ -925,12 +925,12 @@ export const useRecentlyViewedStore = create<RecentlyViewedStore>()(
 );
 
 // Returns true after the first client-side render. By that point Zustand
-// persist has already read from localStorage (toThenable is synchronous for
-// localStorage), so gating redirects on this avoids premature redirects.
-//
-// Uses a module-level flag so once ANY component has hydrated in this session,
-// all future renders start as `true` — eliminating the blank-frame flash on
-// page navigation within the same SPA session.
+// ssrStorage.getItem reads localStorage synchronously, so Zustand's persist
+// middleware populates the store before the first React render on the client.
+// Zustand persist hydrates via a microtask even with synchronous storage, so
+// isAuthenticated is false on the very first render regardless. _hydrated stays
+// false until useEffect fires so pages can show a skeleton instead of the
+// sign-in screen during that brief hydration window.
 let _hydrated = false;
 
 export function useHasHydrated() {
