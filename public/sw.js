@@ -1,10 +1,11 @@
-const CACHE = "bigpool-v5";
+const CACHE = "bigpool-v6";
 
-const STATIC = ["/", "/customer/products", "/customer/cart"];
+// Pre-cached on install so pull-to-refresh on these pages never waits for network
+const PRECACHE = ["/", "/customer/products", "/customer/cart", "/customer/profile"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(STATIC)).then(() => self.skipWaiting())
+    caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting())
   );
 });
 
@@ -16,22 +17,31 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+// Stale-while-revalidate: serve cache instantly, update in background.
+// This eliminates the dark-screen gap on pull-to-refresh that network-first causes.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || e.request.url.includes("/api/")) return;
+
   e.respondWith(
-    fetch(e.request)
-      .then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request).then((r) => r || caches.match("/")))
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(e.request);
+
+      // Always kick off a network fetch to keep the cache fresh
+      const networkFetch = fetch(e.request)
+        .then((res) => {
+          if (res && res.ok) cache.put(e.request, res.clone());
+          return res;
+        })
+        .catch(() => null);
+
+      // Serve cached immediately; if nothing cached yet, wait for network
+      return cached ?? networkFetch;
+    })
   );
 });
 
 /* ── Web Push ── */
 self.addEventListener("push", (e) => {
-  // Parse payload — default to empty object if missing or malformed
   let data = {};
   try { if (e.data) data = e.data.json(); } catch {}
 
@@ -40,9 +50,6 @@ self.addEventListener("push", (e) => {
       const appIsOpen = list.some((c) => c.visibilityState === "visible");
 
       if (appIsOpen) {
-        // App is in foreground: tell the page to update the in-app bell instead.
-        // We MUST still show a notification (userVisibleOnly:true requires it),
-        // so show a silent one with no badge/sound/vibration so nothing appears.
         list.forEach((c) => c.postMessage({ type: "push", data }));
         return self.registration.showNotification("", {
           silent: true,
@@ -51,7 +58,6 @@ self.addEventListener("push", (e) => {
         });
       }
 
-      // App is in background — show full visible notification
       return self.registration.showNotification(data.title || "Bigpool", {
         body: data.body || "",
         icon: "/icon-192.png",
