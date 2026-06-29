@@ -1,12 +1,8 @@
-const CACHE = "bigpool-v6";
-
-// Pre-cached on install so pull-to-refresh on these pages never waits for network
-const PRECACHE = ["/", "/customer/products", "/customer/cart", "/customer/profile"];
+const CACHE = "bigpool-v7";
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
+  // No pre-caching — let the cache fill naturally on first use
+  e.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (e) => {
@@ -17,26 +13,41 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// Stale-while-revalidate: serve cache instantly, update in background.
-// This eliminates the dark-screen gap on pull-to-refresh that network-first causes.
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET" || e.request.url.includes("/api/")) return;
+  if (e.request.method !== "GET") return;
 
+  const url = new URL(e.request.url);
+
+  // API calls: always go to network, never cache
+  if (url.pathname.startsWith("/api/")) return;
+
+  // Next.js JS/CSS chunks are content-hashed — safe to cache forever (cache-first)
+  // This makes React hydrate instantly on pull-to-refresh
+  if (url.pathname.startsWith("/_next/static/")) {
+    e.respondWith(
+      caches.open(CACHE).then(async (cache) => {
+        const cached = await cache.match(e.request);
+        if (cached) return cached;
+        const res = await fetch(e.request);
+        if (res.ok) cache.put(e.request, res.clone());
+        return res;
+      })
+    );
+    return;
+  }
+
+  // HTML pages: network-first so we never serve stale HTML that references
+  // old JS chunk filenames (which would break React hydration and freeze the skeleton)
   e.respondWith(
-    caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(e.request);
-
-      // Always kick off a network fetch to keep the cache fresh
-      const networkFetch = fetch(e.request)
-        .then((res) => {
-          if (res && res.ok) cache.put(e.request, res.clone());
-          return res;
-        })
-        .catch(() => null);
-
-      // Serve cached immediately; if nothing cached yet, wait for network
-      return cached ?? networkFetch;
-    })
+    fetch(e.request)
+      .then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request).then((r) => r ?? caches.match("/")))
   );
 });
 
