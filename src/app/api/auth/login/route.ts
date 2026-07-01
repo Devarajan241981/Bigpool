@@ -91,11 +91,20 @@ export async function POST(request: NextRequest) {
   const db = getDb();
 
   if (db) {
-    const { data: profile } = await db
+    const { data: profile, error: dbError } = await db
       .from("users")
       .select("*")
       .eq("email", normalizedEmail)
       .single();
+
+    // Distinguish "user not found" from "database unreachable" (e.g. Supabase paused)
+    if (dbError && dbError.code !== "PGRST116") {
+      console.error("[login] Supabase error:", dbError.message);
+      return NextResponse.json(
+        { error: "Database unavailable. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
 
     if (!profile) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
