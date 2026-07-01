@@ -1,4 +1,4 @@
-const CACHE = "bigpool-v7";
+const CACHE = "bigpool-v8";
 
 self.addEventListener("install", (e) => {
   // No pre-caching — let the cache fill naturally on first use
@@ -10,6 +10,13 @@ self.addEventListener("activate", (e) => {
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window", includeUncontrolled: true }))
+      .then((clients) => {
+        // Tell every open tab to reload so it gets fresh HTML.
+        // This prevents the "frozen page" bug where old HTML (cached by a previous SW)
+        // references old JS chunk hashes that no longer exist after a new deployment.
+        clients.forEach((c) => c.postMessage({ type: "SW_UPDATED" }));
+      })
   );
 });
 
