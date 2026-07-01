@@ -113,7 +113,7 @@ export default function CheckoutPage() {
       customerName: user.name,
       items,
       total: finalTotal,
-      paymentStatus: "paid",
+      paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
       paymentMethod,
       address: deliveryAddress,
       voucherCode: appliedVoucher?.voucher.code,

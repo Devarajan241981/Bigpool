@@ -137,14 +137,17 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
 
   const handleCancel = async () => {
     if (!order) return;
+    const isCOD = order.paymentMethod === "cod";
     const deductPct = order.status === "packed" ? 0.2 : (order.status === "shipped" || order.status === "out_for_delivery") ? 0.5 : 0;
     const deductLabel = deductPct > 0 ? `${deductPct * 100}%` : null;
-    const msg = deductLabel
-      ? `Your order is already ${order.status.replace(/_/g, " ")}. Per our T&C, a ${deductLabel} deduction applies. Proceed with cancellation?`
-      : "Cancel this order? You'll receive a 100% refund to your Bigpool Wallet instantly.";
+    const msg = isCOD
+      ? "Cancel this Cash on Delivery order? No payment was made, so no refund is needed."
+      : deductLabel
+        ? `Your order is already ${order.status.replace(/_/g, " ")}. Per our T&C, a ${deductLabel} deduction applies. Proceed with cancellation?`
+        : "Cancel this order? You'll receive a 100% refund to your Bigpool Wallet instantly.";
     if (!window.confirm(msg)) return;
     await updateOrderStatus(order.id, "cancelled");
-    if (user) {
+    if (user && !isCOD) {
       const refundAmount = Math.round(order.total * (1 - deductPct));
       const refund = {
         id: `REF-${Date.now()}`,
@@ -163,7 +166,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
       fetch("/api/refunds", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(refund) }).catch(() => {});
       toast.success(`Order cancelled. ₹${refundAmount.toLocaleString()} refund initiated.`);
     } else {
-      toast.success("Order cancelled. Refund will be processed shortly.");
+      toast.success("Order cancelled successfully.");
     }
   };
 
